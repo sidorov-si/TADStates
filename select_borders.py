@@ -6,7 +6,7 @@ Borders with high score are called 'strong'. They tend to be conservative and en
 small amount of interactions to occur over them.
 
 Usage:
-  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory>]
+  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory> -O <output_directory_for_total_track>]
 
 Options:
   -h --help                        Show this screen.
@@ -21,6 +21,7 @@ Options:
   -w <border_width>                Border width (in bp).
   -i <score_interval>              Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a < b).
   -o <output_directory>            Output directory.
+  -O <output_directory_for_total_track> Output directory for thetrack with all borders. (It is copied here from output directory).
 """
 
 
@@ -28,7 +29,7 @@ import sys
 
 print
 
-modules = ["docopt", "os"]
+modules = ["docopt", "os", "shutil"]
 exit_flag = False
 for module in modules:
     try:
@@ -52,7 +53,7 @@ from os.path import isdir
 from os.path import isfile
 from os import listdir
 from os import makedirs
-
+from shutil import copy
 
 def select_borders(tads_filename, scores_filename, start_score, end_score, \
                    output_directory, half_width):
@@ -215,6 +216,12 @@ if __name__ == '__main__':
     if output_directory != '' and (not exists(output_directory)):
         makedirs(output_directory)
 
+    output_directory_total = None
+    if arguments["-O"] != None:
+        output_directory_total = arguments["-O"]
+        if not exists(output_directory_total):
+            makedirs(output_directory_total)
+
     if tads_filename != None:
         select_borders(tads_filename, scores_filename, start_score, end_score, \
                        output_directory, half_width)
@@ -246,3 +253,5 @@ if __name__ == '__main__':
                             continue
                         dst.write(line)
 
+        if output_directory_total != None:
+            copy(genome_bed_filename, output_directory_total)
