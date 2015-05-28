@@ -9,19 +9,19 @@ Usage:
   select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory> -O <output_directory_for_total_track>]
 
 Options:
-  -h --help                        Show this screen.
-  --version                        Show version.
-  -t <TADs_filename>               Name of a BED file with TAD coordinates in one chromosome.
-  -s <scores_filename>             Name of a TXT file with border scores in one chromosome.
-  -n <track_name>                  Name of a track of selected borders. Default: Borders_<border_width>_<scores>.
-  -T <TADs_directory>              Name of a directory containing only BED files with TAD coordinates.
-  -S <scores_directory>            Name of a directory containing only TXT files with border scores.
-  -N <track_name_for_all_borders>  Name of a track of all selected borders. Default: All_borders_<border_width>_<scores>.
-  --all                            Consider all files from TADs_directory. Default: consider only chr* files.
-  -w <border_width>                Border width (in bp).
-  -i <score_interval>              Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a < b).
-  -o <output_directory>            Output directory.
-  -O <output_directory_for_total_track> Output directory for thetrack with all borders. (It is copied here from output directory).
+  -h --help                              Show this screen.
+  --version                              Show version.
+  -t <TADs_filename>                     Name of a BED file with TAD coordinates in one chromosome.
+  -s <scores_filename>                   Name of a TXT file with border scores in one chromosome.
+  -n <track_name>                        Name of a track of selected borders. Default: Borders_<border_width>_<scores>.
+  -T <TADs_directory>                    Name of a directory containing only BED files with TAD coordinates.
+  -S <scores_directory>                  Name of a directory containing only TXT files with border scores.
+  -N <track_name_for_all_borders>        Name of a track of all selected borders. Default: All_borders_<border_width>_<scores>.
+  --all                                  Consider all files from TADs_directory. Default: consider only chr* files.
+  -w <border_width>                      Border width (in bp).
+  -i <score_interval>                    Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a < b).
+  -o <output_directory>                  Output directory.
+  -O <output_directory_for_total_track>  Output directory for thetrack with all borders. (It is copied here from output directory).
 """
 
 
