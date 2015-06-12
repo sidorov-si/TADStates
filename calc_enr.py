@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     chromhmm_directory = arguments["-c"].rstrip('/')
     if not exists(chromhmm_directory):
-        print "Error: Can't find ChromHMM director: no such directory '" + \
+        print "Error: Can't find ChromHMM directory: no such directory '" + \
               chromhmm_directory + "'. Exit.\n"
         sys.exit(1)
     if not isdir(chromhmm_directory):

@@ -5,7 +5,7 @@ On the horizontal axis scores from 1 to 10 are put.
 For each score value a number of TAD boreds with this score is calculated.
 
 Usage:
-  plot_score_distrib.py -d <directory_with_score_files> -o <output_filename>
+  plot_scores.py -d <directory_with_score_files> -o <output_filename>
 
 Options:
   -h --help                        Show this screen.
@@ -52,7 +52,7 @@ if __name__ == '__main__':
               input_directory + "'. Exit.\n"
         sys.exit(1)
     if not isdir(input_directory):
-        print "Error: Input directory must be a regular file. Something else given. Exit.\n"
+        print "Error: Input directory must be a directory:). Something else given. Exit.\n"
         sys.exit(1)
 
     output_filename = arguments["-o"]

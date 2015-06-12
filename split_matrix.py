@@ -147,7 +147,7 @@ if __name__ == '__main__':
                   matrix_filename + "'. Exit.\n"
             sys.exit(1)
         if not isfile(matrix_filename):
-            print "Error: File with contact matrix be a regular file. " + \
+            print "Error: File with contact matrix must be a regular file. " + \
                   "Something else given. Exit.\n"
             sys.exit(1)
         input_directory = None

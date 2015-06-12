@@ -19,9 +19,9 @@ Options:
   -N <track_name_for_all_borders>        Name of a track of all selected borders. Default: All_borders_<border_width>_<scores>.
   --all                                  Consider all files from TADs_directory. Default: consider only chr* files.
   -w <border_width>                      Border width (in bp).
-  -i <score_interval>                    Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a < b).
+  -i <score_interval>                    Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a <= b).
   -o <output_directory>                  Output directory.
-  -O <output_directory_for_total_track>  Output directory for thetrack with all borders. (It is copied here from output directory).
+  -O <output_directory_for_total_track>  Output directory for the track with all borders. (It is copied here from output directory).
 """
 
 
