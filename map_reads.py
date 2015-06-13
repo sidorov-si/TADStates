@@ -169,7 +169,6 @@ if __name__ == '__main__':
     stdout.flush()
 
     print 'Check samtools...'
-    no_stat = False
     stdout.flush()
     with open(devnull, 'w') as FNULL:
         check_samtools_code = call(['samtools', 'flags'], stderr=FNULL)
