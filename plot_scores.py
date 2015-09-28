@@ -2,16 +2,17 @@
 """
 Plot diagram of TAD border scores distribution. 
 On the horizontal axis scores from 1 to 10 are put. 
-For each score value a number of TAD boreds with this score is calculated.
+For each score value a number of TAD borders with this score is calculated.
 
 Usage:
-  plot_scores.py -d <directory_with_score_files> -o <output_filename>
+  plot_scores.py -d <directory_with_score_files> -o <output_filename> [--header <plot_header>]
 
 Options:
   -h --help                        Show this screen.
   --version                        Show version.
   -d <directory_with_score_files>  Directory with score files.
   -o <output_filename>             A name for the output file with a bar plot.
+  --header <plot_header>           A header for the plot. Default: 'Number of TAD borders'
 """
 
 
@@ -44,8 +45,17 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+
+def autolabel(rects):
+    # attach some text labels
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2., height + 2, '%d'%int(height),
+                ha='center', va='bottom')
+
+
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='plot_score_distrib 0.2')
+    arguments = docopt(__doc__, version='plot_score_distrib 0.3')
     input_directory = arguments["-d"].rstrip('/')
     if not exists(input_directory):
         print "Error: Can't find input directory: no such directory '" + \
@@ -56,6 +66,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     output_filename = arguments["-o"]
+    plot_header = arguments["--header"]
+    if plot_header == '':
+        plot_header = 'Number of TAD borders'
     
     score_distrib = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
     score_files = listdir(input_directory)
@@ -70,7 +83,10 @@ if __name__ == '__main__':
                 curr_score = int(float(line_list[3]))
                 score_distrib[curr_score] += 1
             score_distrib[curr_score] -= 1 # Exclude the last border score
-    print score_distrib
+    print 'Score distribution:     ', score_distrib
+    total_count = sum(score_distrib.values())
+    print 'Total number of borders:', total_count
+    print
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -82,11 +98,16 @@ if __name__ == '__main__':
     width = 0.7
     y_max = max(values) + 100 #800
     bars = ax.bar(ind, values, width, color='blue')
+    autolabel(bars)
     ax.set_ylim(0, y_max)
+    ax.set_xlabel('Scores')
     ax.set_ylabel('Number of borders')
-    ax.set_title('Scores')
+    ax.set_title(plot_header)
+    legend_text = 'Total number of borders: ' + str(total_count)
+    ax.legend([bars[0]], [legend_text], loc='upper left')
     xTickMarks = [str(i) for i in range(1, 11)]
-    ax.set_xticks(ind + width/2)
+    ax.set_xticks(ind + width / 2)
     xtickNames = ax.set_xticklabels(xTickMarks)
     plt.setp(xtickNames)
     plt.savefig(output_filename)
+
