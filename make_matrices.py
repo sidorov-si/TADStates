@@ -5,12 +5,15 @@ If quality assessment and trimming are necessary for Hi-C reads, they must be
 made before launching the script on these reads.
 
 Usage:
-  make_matrices.py -r <fastq_reads> -g <fasta_ref_genome> -i <ref_genome_index> -o <output_directory> [-e <restriction_enzyme> -c <list_of_chromosome_names> -R <matrix_resolution> -t <threads_number>]
+  make_matrices.py (-1 <left_fastq_reads> -2 <right_fastq_reads> -p <reads_prefix> | -r <fastq_reads>) -g <fasta_ref_genome> -i <ref_genome_index> -o <output_directory> [-e <restriction_enzyme> -c <list_of_chromosome_names> -R <matrix_resolution> -t <threads_number> --clean]
 
 Options:
   -h --help                      Show this screen.
   --version                      Show version.
-  -r <fastq_file>                FASTQ file with Hi-C reads (both left and right in one file).
+  -1 <left_fastq_reads>          FASTQ file with left (forward) Hi-C reads.
+  -2 <right_fastq_reads>         FASTQ file with right (reverse) Hi-C reads.
+  -p <output_prefix>             Prefix for output files with information about both left and right Hi-C reads.
+  -r <fastq_reads>               FASTQ file with both left (forward) and right (reverse) Hi-C reads.
   -g <fasta_ref_genome>          FASTA file with reference genome.
   -i <ref_genome_index>          Reference genome index for GEMtools.
   -e <restriction_enzyme>        Name of the restriction enzyme. Default: HindIII. The full list of possible restriction enzyme names see https://github.com/3DGenomes/tadbit/blob/master/_pytadbit/mapping/restriction_enzymes.py
@@ -18,6 +21,7 @@ Options:
   -R <matrix_resolution>         Resolution of the output Hi-C matrices (bp). Default: 100000.
   -o <output_directory>          Output directory.
   -t <threads_number>            Number of threads for read mapping. Default: 8.
+  --clean                        Remove all SAM and TSV files from the output directory (they're necessary for only the counstruction of contact matrices).
 """
 
 # Some code from the TADbit tutorial is used here
@@ -57,7 +61,8 @@ from os import rename
 from sys import stdout
 
 
-def calc_ranges(reads_fastq):
+def calc_left_right_ranges(reads_fastq): 
+    # called when both left and right reads are stored in one file
     with open(reads_fastq, 'r') as src:
         read_id = src.readline()
         read_seq = src.readline().rstrip('\n')
@@ -81,7 +86,31 @@ def calc_ranges(reads_fastq):
         last_right_stop_pos = first_right_stop_pos + (range_len - 1) * step
         range_stop_right = [pos for pos in range(first_right_stop_pos, \
                             last_right_stop_pos + 1, step)]
+        return range_start_left, range_stop_left, range_start_right, range_stop_right
 
+
+def calc_range(left_reads_fastq): 
+    # called when reads are separated in two files
+    # to calc ranges we need only one of the two files here
+    with open(left_reads_fastq, 'r') as src:
+        read_id = src.readline()
+        read_seq = src.readline().rstrip('\n')
+        read_len = len(read_seq)
+        print 'Read lenght:', read_len
+        stdout.flush()
+        min_len = 20
+        step = 5
+        range_len = (read_len - min_len + 1) / step + 1
+        # calc range_start
+        range_start = [1] * range_len
+        # calc range_stop
+        first_stop_pos = min_len
+        last_stop_pos = first_stop_pos + (range_len - 1) * step
+        range_stop = [pos for pos in range(first_stop_pos, last_stop_pos + 1, step)]
+        range_start_left = range_start
+        range_start_right = range_start[:]
+        range_stop_left = range_stop
+        range_stop_right = range_stop[:]
         return range_start_left, range_stop_left, range_start_right, range_stop_right
 
 
@@ -117,27 +146,57 @@ def add_headers(chromosomes, resolution, output_directory):
         rename(chr_filename_tmp, chr_filename)
 
 
-def make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
-                  enzyme, res, chromosomes, threads_number):
-    range_start_left, range_stop_left, \
-    range_start_right, range_stop_right = calc_ranges(reads_fastq)
+def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
+                  output_directory, output_prefix, enzyme, res, chromosomes, threads_number, \
+                  clean_tmp):
+
+    print 'Begin to process reads.'
+
+    left_reads = ''
+    right_reads = ''
+    if reads_fastq != '': # left and right reads are stored in one file
+        range_start_left, range_stop_left, \
+        range_start_right, range_stop_right = calc_left_right_ranges(reads_fastq)
+        print 'Reads:                     ', reads_fastq
+        left_reads = reads_fastq
+        right_reads = reads_fastq
+    else: # left and right reads are stored separately
+        range_start_left, range_stop_left, \
+        range_start_right, range_stop_right = calc_range(left_reads_fastq)
+        print 'Left reads:                ', left_reads_fastq
+        print 'Right reads:               ', right_reads_fastq
+        print 'Output prefix:             ', output_prefix
+        left_reads = left_reads_fastq
+        right_reads = right_reads_fastq
+
+    print 'Reference genome FASTA:    ', genome_fasta
+    print 'Reference genome GEM index:', genome_index
+    print 'Output directory:          ', output_directory
+    print 'Enzyme:                    ', enzyme
+    print 'Resolution:                ', res, 'bp'
+    print 'Number of threads:         ', threads_number
+    print 'Start pos for left reads:  ', range_start_left
+    print 'Stop pos for left reads:   ', range_stop_left
+    print 'Start pos for right reads: ', range_start_right
+    print 'Stop pos for right reads:  ', range_stop_right
+    stdout.flush()
 
     # map left reads to reference genome
-    out_sam_left_name = splitext(basename(reads_fastq))[0] + '_left.sam'
+    out_sam_left_name = splitext(basename(left_reads))[0] + '_left.sam'
     out_sam_left_path = join(output_directory, out_sam_left_name)
     print 'Iterative mapping of left reads (using ' + str(threads_number) + ' threads)...'
     stdout.flush()
-    sams_left = iterative_mapping(genome_index, reads_fastq, out_sam_left_path, \
+    sams_left = iterative_mapping(genome_index, left_reads, out_sam_left_path, \
                                   range_start_left, range_stop_left, nthreads=threads_number)
     print 'Done.'
     stdout.flush()
 
     # map right reads to reference genome
-    out_sam_right_name = splitext(basename(reads_fastq))[0] + '_right.sam'
+    out_sam_right_name = splitext(basename(right_reads))[0] + '_right.sam'
     out_sam_right_path = join(output_directory, out_sam_right_name)
     print 'Iterative mapping of right reads (using ' + str(threads_number) + ' threads)...'
     stdout.flush()
-    sams_right = iterative_mapping(genome_index, reads_fastq, out_sam_right_path, \
+    sams_right = iterative_mapping(genome_index, right_reads, out_sam_right_path, \
                                    range_start_right, range_stop_right, nthreads=threads_number)
     print 'Done.'
     stdout.flush()
@@ -152,9 +211,9 @@ def make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
 
     # create files with information about every left and right read 
     # and about their placement with respect to restriction sites
-    tsv_left_name = splitext(basename(reads_fastq))[0] + '_left.tsv'
+    tsv_left_name = splitext(basename(left_reads))[0] + '_left.tsv'
     tsv_left = join(output_directory, tsv_left_name)
-    tsv_right_name = splitext(basename(reads_fastq))[0] + '_right.tsv'
+    tsv_right_name = splitext(basename(right_reads))[0] + '_right.tsv'
     tsv_right = join(output_directory, tsv_right_name)
     print 'Get information about restriction sites and reads placement...'
     stdout.flush()
@@ -164,7 +223,11 @@ def make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
     stdout.flush()
 
     # create file with both left and right reads that uniquelly mapped to reference genome
-    uniq_reads_name = splitext(basename(reads_fastq))[0] + '_both_map_uniq.tsv'
+    if reads_fastq != '': # left and right reads are stored in one file
+        common_reads_prefix = splitext(basename(reads_fastq))[0]
+    else: # left and right reads are stored separately
+        common_reads_prefix = output_prefix
+    uniq_reads_name = common_reads_prefix + '_both_map_uniq.tsv'
     uniq_reads = join(output_directory, uniq_reads_name)
     print 'Merge info about left and right reads in one file...'
     stdout.flush()
@@ -182,7 +245,7 @@ def make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
     # apply all filters (exclude reads that were filtered)
     print 'Filter masked reads...'
     stdout.flush()
-    filtered_reads_name = splitext(basename(reads_fastq))[0] + '_filtered.tsv'
+    filtered_reads_name = common_reads_prefix + '_filtered.tsv'
     filtered_reads = join(output_directory, filtered_reads_name)
     apply_filter(uniq_reads, filtered_reads, masked)
     print 'Done.'
@@ -204,6 +267,14 @@ def make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
     add_headers(chromosomes, resolution, output_directory)
     print 'Done.'
     stdout.flush()
+    if clean_tmp: # Remove all SAM and TSV files from the output directory
+        print 'Remove SAM and TSV files from the output directory.'
+        stdout.flush()
+        os.remove(out_sam_left_path + '*')
+        os.remove(out_sam_right_path + '*')
+        os.remove(join(output_directory, '*.tsv'))
+        print 'Done.'
+        stdout.flush()
 
 
 def get_chromosome_names(chromosome_names_file):
@@ -224,16 +295,42 @@ def get_chromosome_names(chromosome_names_file):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='make_matrices 0.4')
-    reads_fastq = arguments["-r"]
-    if not exists(reads_fastq):
-        print "Error: Can't find FASTQ file with reads: no such file '" + \
-              reads_fastq + "'. Exit.\n"
-        sys.exit(1)
-    if not isfile(reads_fastq):
-        print "Error: FASTQ file with reads must be a regular file. " + \
-              "Something else given. Exit.\n"
-        sys.exit(1)
+    arguments = docopt(__doc__, version='make_matrices 0.7')
+    if arguments["-r"] != None: # left and right reads are stored in one file
+        reads_fastq = arguments["-r"]
+        if not exists(reads_fastq):
+            print "Error: Can't find FASTQ file with reads: no such file '" + \
+                  reads_fastq + "'. Exit.\n"
+            sys.exit(1)
+        if not isfile(reads_fastq):
+            print "Error: FASTQ file with reads must be a regular file. " + \
+                  "Something else given. Exit.\n"
+            sys.exit(1)
+        left_reads_fastq = ''
+        right_reads_fastq = ''
+        output_prefix = ''
+    else: # left and right reads are stored separately
+        left_reads_fastq = arguments["-1"]
+        if not exists(left_reads_fastq):
+            print "Error: Can't find FASTQ file with left (forward) reads: no such file '" + \
+                  left_reads_fastq + "'. Exit.\n"
+            sys.exit(1)
+        if not isfile(left_reads_fastq):
+            print "Error: FASTQ file with left (forward) reads must be a regular file. " + \
+                  "Something else given. Exit.\n"
+            sys.exit(1)
+
+        right_reads_fastq = arguments["-2"]
+        if not exists(right_reads_fastq):
+            print "Error: Can't find FASTQ file with right (reverse) reads: no such file '" + \
+                  right_reads_fastq + "'. Exit.\n"
+            sys.exit(1)
+        if not isfile(right_reads_fastq):
+            print "Error: FASTQ file with reads must be a regular file. " + \
+                  "Something else given. Exit.\n"
+            sys.exit(1)
+        output_prefix = arguments["-p"]
+        reads_fastq = ''
 
     genome_fasta = arguments["-g"]
     if not exists(genome_fasta):
@@ -285,5 +382,12 @@ if __name__ == '__main__':
     else:
          threads_number = 8
 
-    make_matrices(reads_fastq, genome_fasta, genome_index, output_directory, \
-                  enzyme, resolution, chromosomes, threads_number)
+    if arguments["--clean"]:
+        clean_tmp = True
+    else:
+        clean_tmp = False
+
+    make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
+                  output_directory, output_prefix, enzyme, resolution, chromosomes, threads_number, \
+                  clean_tmp)
+
