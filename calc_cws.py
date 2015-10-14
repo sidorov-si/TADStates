@@ -63,6 +63,15 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
+def bp_to_KMbp(bp_count):
+    if bp_count % 1000 == 0:
+        if bp_count % 1000000 == 0:
+	    return str(bp_count / 1000000) + ' Mbp'
+        else:
+            return str(bp_count / 1000) + ' Kbp'
+    else:
+        return str(bp_count) + ' bp'
+
 def calc_cws(contact_matrix_filename, chrom_name):
     print
     print 'Contact matrix file:', contact_matrix_filename
@@ -183,7 +192,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
         if tads_filename == None:
             plot_header = 'CWS for ' + chrom_name
         else:
-            plot_header = 'CWS for ' + chrom_name + ' with marked TAD borders'
+            plot_header = 'CWS for ' + chrom_name + ' with TAD borders'
+        plot_header += '. Vicinity:'
+        if vicinity_size != -1:
+            plot_header += ' ' + bp_to_KMbp(vicinity_size)
+        else:
+            plot_header += ' whole chr1'
         if start_coord == None and end_coord == None:
             borders_count = len(result)
             ind = numpy.arange(matrix_resolution, (borders_count + 1) * matrix_resolution, matrix_resolution)
@@ -198,7 +212,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
             additional_value = matrix_resolution if end_coord != chr_len else 0
             ind = numpy.arange(start_coord, end_coord + additional_value, matrix_resolution)
             ax.plot(ind, region_result, '.-', color = 'blue')
-            plot_header += '. Region: ' + str(start_coord) + '-' + str(end_coord) + ' bp'
+            plot_header += '. Region: ' + bp_to_KMbp(start_coord) + ' - ' + bp_to_KMbp(end_coord)
 
         if tads_filename != None:
         # also plot TAD borders
