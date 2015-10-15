@@ -84,6 +84,7 @@ def bp_to_KMbp(bp_count):
     else:
         return str(bp_count) + ' bp'
 
+
 def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_scores, \
                  tad_border_coords):
     tad_border_cws = [cws_value for border_score, cws_value in \
@@ -102,6 +103,7 @@ def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_s
                 xy = (x, y), xytext = (0, -15),
                 textcoords = 'offset points', va = 'bottom'
             )
+
 
 def calc_cws(contact_matrix_filename, chrom_name):
     print
@@ -309,7 +311,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 0.4')
+    arguments = docopt(__doc__, version='calc_cws 0.5')
 
     try:
         matrix_resolution = int(arguments["-r"])
