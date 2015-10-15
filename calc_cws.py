@@ -107,15 +107,15 @@ def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_s
 
 def calc_cws(contact_matrix_filename, chrom_name):
     print
-    print 'Contact matrix file:', contact_matrix_filename
-    print 'Matrix resolution:  ', matrix_resolution
-    print 'BED track name:     ', track_name
+    print 'Contact matrix file:            ', contact_matrix_filename
+    print 'Matrix resolution:              ', matrix_resolution
+    print 'BED track name:                 ', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:      ', vicinity_size
+        print 'Vicinity size:                  ', vicinity_size
     else:
-        print 'Vicinity size:       Calculate CWS across the whole genome.'
+        print 'Vicinity size:                   Calculate CWS across the whole genome.'
     stdout.flush()
-    print 'Region to plot:     ',
+    print 'Region to plot:                 ',
     if start_coord == None and end_coord == None:
         print 'The whole chromosome.'
     else:
@@ -129,8 +129,10 @@ def calc_cws(contact_matrix_filename, chrom_name):
     output_bed_filename = join(bed_directory, chrom_id + '_CWS.bed')
     filename_list.append(output_bed_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
-    print 'Output BED file:    ', output_bed_filename
-    print 'Output PNG file:    ', output_png_filename
+    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png')
+    print 'Output BED file:                ', output_bed_filename
+    print 'Output PNG file (CWS):          ', output_png_filename
+    print 'Output PNG file (Scores vs CWS):', output_png_boxplot
     stdout.flush()
 
     # Calculate CWS for all borders between windows
@@ -246,9 +248,13 @@ def calc_cws(contact_matrix_filename, chrom_name):
             ind = numpy.arange(start_coord, end_coord + additional_value, matrix_resolution)
             ax.plot(ind, region_result, '.-', color = 'blue')
             plot_header += '. Region: ' + bp_to_KMbp(start_coord) + ' - ' + bp_to_KMbp(end_coord)
+        print 'Finish.'
+        stdout.flush()
 
         if tads_filename != None:
         # also plot TAD borders
+            print 'Plot TAD borders for chromosome', chrom_name, '...',
+            stdout.flush()
             with open(tads_filename, 'r') as tads:
                 tad_border_coords = []
                 for i, line in enumerate(tads):
@@ -261,9 +267,17 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 tad_border_numbers = [coord / matrix_resolution - 1 for coord in tad_border_coords]
                 tad_border_cws = [result[border_number] for border_number in tad_border_numbers]
                 ax.plot(tad_border_coords, tad_border_cws, '.', color = 'red', ms = 10)
+            print 'Finish.'
+            stdout.flush()
 
         if borders_filename != None:
         # also plot TAD borders colored according to their scores
+            message = 'Color '
+            if not no_labels:
+                message += 'and label '
+            message += 'TAD borders for chromosome ' + chrom_name + ' ...'
+            print message,
+            stdout.flush()
             with open(borders_filename, 'r') as borders:
                 tad_border_coords = []
                 tad_border_scores = []
@@ -285,7 +299,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 plot_borders(7, 9, 'orange', ax, tad_border_cws, tad_border_scores, tad_border_coords)
                 # Select the strongest borders and paint them red
                 plot_borders(10, 10, 'red', ax, tad_border_cws, tad_border_scores, tad_border_coords)
+            print 'Finish.'
+            stdout.flush()
 
+        # Save CWS plot to file
+        print 'Save CWS plot for', chrom_name, 'to file ...',
+        stdout.flush()
         if start_coord == None:
             max_cws = max(result)
             last_border_number = len(result) - 1
@@ -301,6 +320,25 @@ def calc_cws(contact_matrix_filename, chrom_name):
         plt.savefig(output_png_filename)
         print 'Finish.'
         stdout.flush()
+       
+        if borders_filename != None:
+           # plot TAD border scores vs CWS plot
+            print "Generate PNG file with 'TAD border scores vs CWS' plot for chromosome", \
+                  chrom_name, "...",
+            stdout.flush()
+            boxplot_data = []
+            for score in range(1, 11):
+                boxplot_data.append([cws for cws, border_score in \
+                                     zip(tad_border_cws, tad_border_scores) \
+                                     if border_score == score])
+            ax.boxplot(boxplot_data, 0, 'b.')
+            boxplot_header = 'TAD border scores vs CWS for ' + chrom_name
+            ax.set_xlabel('TAD border scores, bp')
+            ax.set_ylabel('CWS')
+            ax.set_title(boxplot_header)
+            plt.savefig(output_png_boxplot)
+            print 'Finish.'
+            stdout.flush()
 
 
 def get_chrom_name(matrix_filename):
@@ -311,7 +349,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 0.5')
+    arguments = docopt(__doc__, version='calc_cws 0.6')
 
     try:
         matrix_resolution = int(arguments["-r"])
@@ -530,8 +568,6 @@ if __name__ == '__main__':
                         if i == 0:
                             continue
                         dst.write(line)
-        print 'Finish.'
-        stdout.flush()
     print 'Processing is finished.'
     stdout.flush()
 
