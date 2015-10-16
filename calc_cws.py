@@ -237,7 +237,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
         if vicinity_size != -1:
             plot_header += ' ' + bp_to_KMbp(vicinity_size)
         else:
-            plot_header += ' whole chr1'
+            plot_header += ' whole ' + chrom_name
         if start_coord == None and end_coord == None:
             borders_count = len(result)
             ind = numpy.arange(matrix_resolution, (borders_count + 1) * matrix_resolution, matrix_resolution)
@@ -337,7 +337,11 @@ def calc_cws(contact_matrix_filename, chrom_name):
                                      zip(tad_border_cws, tad_border_scores) \
                                      if border_score == score])
             ax.boxplot(boxplot_data, 0, 'b.')
-            boxplot_header = 'TAD border scores vs CWS for ' + chrom_name
+            boxplot_header = 'TAD border scores vs CWS for ' + chrom_name + '. Vicinity:'
+            if vicinity_size != -1:
+                boxplot_header += ' ' + bp_to_KMbp(vicinity_size)
+            else:
+                plot_header += ' whole ' + chrom_name
             ax.set_xlabel('TAD border scores, bp')
             ax.set_ylabel('CWS')
             ax.set_title(boxplot_header)
