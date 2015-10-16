@@ -113,10 +113,10 @@ def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_s
 def calc_cws(contact_matrix_filename, chrom_name):
     print
     print 'Contact matrix file:            ', contact_matrix_filename
-    print 'Matrix resolution:              ', matrix_resolution
+    print 'Matrix resolution:              ', bp_to_KMbp(matrix_resolution)
     print 'BED track name:                 ', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:                  ', vicinity_size
+        print 'Vicinity size:                  ', bp_to_KMbp(vicinity_size)
     else:
         print 'Vicinity size:                   Calculate CWS across the whole genome.'
     stdout.flush()
