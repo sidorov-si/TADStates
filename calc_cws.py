@@ -132,10 +132,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
     else:
         chrom_id = chrom_name
     output_bed_filename = join(bed_directory, chrom_id + '_CWS.bed')
+    output_bedgraph_filename = join(bed_directory, chrom_id + '_CWS_bedGraph.bed')
     filename_list.append(output_bed_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
     output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png')
     print 'Output BED file:                ', output_bed_filename
+    print 'Output BedGraph file:           ', output_bedgraph_filename
     print 'Output PNG file (CWS):          ', output_png_filename
     print 'Output PNG file (Scores vs CWS):', output_png_boxplot
     stdout.flush()
@@ -221,6 +223,25 @@ def calc_cws(contact_matrix_filename, chrom_name):
                            border_name + '\t' + str(score) + '\t' + strand + '\t' + \
                            str(start_pos) + '\t' + str(end_pos) + '\t' + color
                 dst.write(bed_line + '\n')
+        print 'Finish.'
+        stdout.flush()
+
+        # Generate BedGraph file with CWS for all borders between windows
+        print 'Generate BedGraph file with CWS for chromosome', chrom_name, '...',
+        stdout.flush()
+        with open(output_bedgraph_filename, 'w') as dst:
+            bedgraph_track_line = 'track type=bedGraph name=' + bedgraph_track_name
+            dst.write(bedgraph_track_line + '\n')
+            for border_number, cws_value in enumerate(result):
+                border_name = str(cws_value)
+                # Coordinates in BedGraph format are 0-based, 
+                # and a region is presented by [x,y) interval.
+                start_pos = (border_number + 1) * matrix_resolution - 100
+                end_pos = (border_number + 1) * matrix_resolution + 100
+                score = cws_value
+                bedgraph_line = chrom_name + '\t' + str(start_pos) + '\t' + str(end_pos) + '\t' + \
+                           str(score)
+                dst.write(bedgraph_line + '\n')
         print 'Finish.'
         stdout.flush()
 
@@ -549,6 +570,7 @@ if __name__ == '__main__':
             chrom_name = get_chrom_name(matrix_filename)
         if track_name == None:
             track_name = chrom_name + '_CWS'
+        bedgraph_track_name = track_name + '_bedGraph'
         calc_cws(matrix_filename, chrom_name)
     else: # there is a directory with matrices
         print
@@ -560,6 +582,7 @@ if __name__ == '__main__':
                 matrix_file_full = join(input_directory, file)
                 chrom_name = get_chrom_name(matrix_file_full)
                 track_name = chrom_name + '_CWS'
+                bedgraph_track_name = track_name + '_bedGraph'
                 calc_cws(matrix_file_full, chrom_name)
         print 
         print 'All chromosomes are processed.'
