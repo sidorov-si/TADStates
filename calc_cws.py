@@ -3,24 +3,29 @@
 Calculate cross-window score (CWS) for each border between Hi-C windows 
 (the width of a Hi-C window is equal to a contact matrix resolution, 
 and a genome is split into back-to-back windows).
+
 CWS of a border is a number of contacts that cross the border. If vicinity_size 
 is set then during CWS calculation only those contacts are considered 
 that connect regions (vicinity_size / 2) bp upstream and downstream 
 the border. Othewise, CWS is calculated across the whole genome.
+
 For each chromosome a BED file is created with all border CWS values.
 All BED files are also concatinated to the whole genome BED file.
 Finally, CWS is plotted for each chromosome, and the graph is stored 
 into correspondent PNG file.
+
 Either a BED file with TADs or a BED file with TAD borders can be set
 as input. In the latter case, border scores will be showed in the plot,
 unless --no-labels option is set.
+
 With -R option you can set a specific region within the chromosome. 
 Only this region will be plotted. Coordinates must be set in bp and 
 be multiples of matrix resolution.
 
-
 Usage:
-  calc_cws.py (-m <contact_matrix> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels])] | -d <input_directory> [-N <track_name_for_whole_genome_BED> -O <output_whole_genome_BED_file>]) -r <matrix_resolution> [-o <output_directory> -e <vicinity_size> --no-labels]
+  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size>] 
+
+  calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BED> -O <output_whole_genome_BED_file> -o <output_directory> -e <vicinity_size>]
 
 Options:
   -h --help                             Show this screen.
