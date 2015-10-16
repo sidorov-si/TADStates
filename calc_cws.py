@@ -8,6 +8,7 @@ CWS of a border is a number of contacts that cross the border. If vicinity_size
 is set then during CWS calculation only those contacts are considered 
 that connect regions (vicinity_size / 2) bp upstream and downstream 
 the border. Othewise, CWS is calculated across the whole genome.
+Vicinity size must be a multiple of (2 * matrix_resolution).
 
 For each chromosome a BED file is created with all border CWS values.
 All BED files are also concatinated to the whole genome BED file.
@@ -168,7 +169,8 @@ def calc_cws(contact_matrix_filename, chrom_name):
         cws = numpy.empty(shape=(matrix_width, matrix_width))
         n = matrix_width - 1 # the number of the last line in the contact matrix
         # for local CWS consider only regions k windows upstream and downstream
-        k = vicinity_size / (2 * matrix_resolution) 
+        k = vicinity_size / (2 * matrix_resolution)
+        print 'k =', k 
         # initial values
         cws[n, 0] = contact_matrix[n, 0]
         for j in range(1, n):
@@ -180,23 +182,23 @@ def calc_cws(contact_matrix_filename, chrom_name):
         for diagonal_index in range(1, n - 1):
             for i, j in zip(range(n - diagonal_index, n), range(1, diagonal_index + 1)):
                 cws[i, j] = cws[i, j - 1] + cws[i + 1, j] - cws[i + 1, j - 1] + contact_matrix[i, j]
-        
+
         if vicinity_size != -1:
             # calculate local CWS 
             # (number of contacts in the 2k-vicinity of a border that cross the border)
             for i, j in zip(range(1, n + 1), range(0, n)):
-                if j - k + 1 < 0:
+                if j - k < 0:
                     left_rect_sum = 0
                     left_bottom_rect_sum = 0
                 else:
-                    left_rect_sum = cws[i, j - k + 1]
-                if i + k - 1 > n:
+                    left_rect_sum = cws[i, j - k]
+                if i + k > n:
                     bottom_rect_sum = 0
                     left_bottom_rect_sum = 0
                 else:
-                    bottom_rect_sum = cws[i + k - 1, j]
-                if not j - k + 1 < 0 and not i + k - 1 > n:
-                    left_bottom_rect_sum = cws[i + k - 1, j - k + 1]
+                    bottom_rect_sum = cws[i + k, j]
+                if not j - k < 0 and not i + k > n:
+                    left_bottom_rect_sum = cws[i + k, j - k]
                 cws[i, j] = cws[i, j] - left_rect_sum - bottom_rect_sum + left_bottom_rect_sum
 
         # CWS for all borders between windows
@@ -531,6 +533,9 @@ if __name__ == '__main__':
             sys.exit(1)
         if vicinity_size <= 0:
             print "Error: Vicinity size must be an integer greater than 0. Exit.\n"
+            sys.exit(1)
+        if not vicinity_size % (2 * matrix_resolution) == 0:
+            print "Error: Vicinity size must be a multiple of (2 * matrix_resolution). Exit.\n"
             sys.exit(1)
     else:
         vicinity_size = -1
