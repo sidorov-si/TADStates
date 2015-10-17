@@ -7,7 +7,7 @@ and a genome is split into back-to-back windows).
 CWS of a border is a number of contacts that cross the border. If vicinity_size 
 is set then during CWS calculation only those contacts are considered 
 that connect regions (vicinity_size / 2) bp upstream and downstream 
-the border. Othewise, CWS is calculated across the whole genome.
+the border. Othewise, CWS is calculated across the whole chromosome.
 Vicinity size must be a multiple of (2 * matrix_resolution).
 
 For each chromosome a BED file is created with all border CWS values.
@@ -119,7 +119,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
     if vicinity_size != -1:
         print 'Vicinity size:                  ', bp_to_KMbp(vicinity_size)
     else:
-        print 'Vicinity size:                   Calculate CWS across the whole genome.'
+        print 'Vicinity size:                   The whole chromosome.'
     stdout.flush()
     print 'Region to plot:                 ',
     if start_coord == None and end_coord == None:
@@ -170,7 +170,6 @@ def calc_cws(contact_matrix_filename, chrom_name):
         n = matrix_width - 1 # the number of the last line in the contact matrix
         # for local CWS consider only regions k windows upstream and downstream
         k = vicinity_size / (2 * matrix_resolution)
-        print 'k =', k 
         # initial values
         cws[n, 0] = contact_matrix[n, 0]
         for j in range(1, n):
@@ -359,12 +358,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 boxplot_data.append([cws for cws, border_score in \
                                      zip(tad_border_cws, tad_border_scores) \
                                      if border_score == score])
-            ax.boxplot(boxplot_data, 0, 'b.')
+            ax.boxplot(boxplot_data, 0, 'b.', whis = [5, 95])
             boxplot_header = 'TAD border scores vs CWS for ' + chrom_name + '. Vicinity:'
             if vicinity_size != -1:
                 boxplot_header += ' ' + bp_to_KMbp(vicinity_size)
             else:
-                plot_header += ' whole ' + chrom_name
+                boxplot_header += ' whole ' + chrom_name
             ax.set_xlabel('TAD border scores, bp')
             ax.set_ylabel('CWS')
             ax.set_title(boxplot_header)
