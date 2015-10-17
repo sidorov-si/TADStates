@@ -141,7 +141,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
     else:
         chrom_id = chrom_name
     output_bed_filename = join(bed_directory, chrom_id + '_CWS.bed')
-    output_bedgraph_filename = join(bed_directory, chrom_id + '_CWS_bedGraph.bed')
+    output_bedgraph_filename = join(bed_directory, chrom_id + '_CWS.bedGraph')
     filename_list.append(output_bed_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
     output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png')
