@@ -6,7 +6,7 @@ Borders with high score are called 'strong'. They tend to be conservative and en
 small amount of interactions to occur over them.
 
 Usage:
-  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory> -O <output_directory_for_total_track> --scores-as-names]
+  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory> -O <output_directory_for_total_track> --scores-as-names --color]
 
 Options:
   -h --help                              Show this screen.
@@ -23,6 +23,7 @@ Options:
   -o <output_directory>                  Output directory.
   -O <output_directory_for_total_track>  Output directory for the track with all borders. (It is copied here from output directory).
   --scores-as-names                      Set scores as border names.
+  --color                                Color TAD borders according to their score.
 """
 
 
@@ -55,6 +56,12 @@ from os.path import isfile
 from os import listdir
 from os import makedirs
 from shutil import copy
+
+
+score_rgb_dict = {1:'0,0,255', 2:'0,255,255', 3:'0,255,170', 4:'0,255,0', \
+                  5:'85,255,0', 6:'170,255,0', 7:'255,255,0', 8:'255,170,0', \
+                  9:'255,85,0', 10:'255,0,0'}
+
 
 def select_borders(tads_filename, scores_filename, start_score, end_score, \
                    output_directory, half_width, scores_as_names):
@@ -91,7 +98,10 @@ def select_borders(tads_filename, scores_filename, start_score, end_score, \
                 else:
                     border_name = chrom_name + '.border.' + str(i - 1)
                 strand = '.' # Just to fill in the field
-                color = '0,255,0' # yellow
+                if color_borders:
+                    color = score_rgb_dict[score]
+                else:
+                    color = '0,255,0' # yellow
                 border_line = chrom_name + '\t' + str(left_coord) + '\t' + \
                               str(right_coord) + '\t' + border_name + '\t' + \
                               str(score) + '\t' + strand + '\t' + str(left_coord) + '\t' + \
@@ -105,7 +115,7 @@ def select_borders(tads_filename, scores_filename, start_score, end_score, \
             
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='select_borders 0.4')
+    arguments = docopt(__doc__, version='select_borders 0.5')
     try:
         border_width = int(arguments["-w"])
     except ValueError:
@@ -209,10 +219,15 @@ if __name__ == '__main__':
         else:
             all = False
 
-        if arguments["--scores-as-names"]:
-            scores_as_names = True
-        else:
-            scores_as_names = False
+    if arguments["--scores-as-names"]:
+        scores_as_names = True
+    else:
+        scores_as_names = False
+
+    if arguments["--color"]:
+        color_borders = True
+    else:
+        color_borders = False
 
     if arguments["-o"] != None:
         output_directory = arguments["-o"].rstrip('/')
