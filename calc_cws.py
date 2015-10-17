@@ -111,21 +111,29 @@ def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_s
             )
 
 
+def autolabel(rects, ax):
+    # attach some text labels to bars
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2., height + 2, '%d' % int(height),
+                ha = 'center', va = 'bottom')
+
+
 def calc_cws(contact_matrix_filename, chrom_name):
     print
-    print 'Contact matrix file:            ', contact_matrix_filename
-    print 'Matrix resolution:              ', bp_to_KMbp(matrix_resolution)
-    print 'BED track name:                 ', track_name
+    print 'Contact matrix file:              ', contact_matrix_filename
+    print 'Matrix resolution:                ', bp_to_KMbp(matrix_resolution)
+    print 'BED track name:                   ', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:                  ', bp_to_KMbp(vicinity_size)
+        print 'Vicinity size:                    ', bp_to_KMbp(vicinity_size)
     else:
-        print 'Vicinity size:                   The whole chromosome.'
+        print 'Vicinity size:                     The whole chromosome.'
     stdout.flush()
-    print 'Region to plot:                 ',
+    print 'Region to plot:                   ',
     if start_coord == None and end_coord == None:
         print 'The whole chromosome.'
     else:
-        print 'From', str(start_coord), 'to', str(end_coord), 'bp.'
+        print 'From', bp_to_KMbp(start_coord), 'to', bp_to_KMbp(end_coord)
     chrom_number = search(r'\d+|X|Y', chrom_name).group(0)
     if len(chrom_number) == 1 and chrom_number != 'X' and chrom_number != 'Y':
         chrom_number = '0' + chrom_number
@@ -137,10 +145,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
     filename_list.append(output_bed_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
     output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png')
-    print 'Output BED file:                ', output_bed_filename
-    print 'Output BedGraph file:           ', output_bedgraph_filename
-    print 'Output PNG file (CWS):          ', output_png_filename
-    print 'Output PNG file (Scores vs CWS):', output_png_boxplot
+    output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins.png')
+    print 'Output BED file:                  ', output_bed_filename
+    print 'Output BedGraph file:             ', output_bedgraph_filename
+    print 'Output PNG file (CWS):            ', output_png_filename
+    print 'Output PNG file (Scores vs CWS):  ', output_png_boxplot
+    print 'Output PNG file (Borders in mins):', output_png_barplot
     stdout.flush()
 
     # Calculate CWS for all borders between windows
@@ -279,7 +289,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
         stdout.flush()
 
         if tads_filename != None:
-        # also plot TAD borders
+            # Plot TAD borders
             print 'Plot TAD borders for chromosome', chrom_name, '...',
             stdout.flush()
             with open(tads_filename, 'r') as tads:
@@ -296,9 +306,9 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 ax.plot(tad_border_coords, tad_border_cws, '.', color = 'red', ms = 10)
             print 'Finish.'
             stdout.flush()
-
+            
         if borders_filename != None:
-        # also plot TAD borders colored according to their scores
+            # Plot TAD borders colored according to their scores
             message = 'Color '
             if not no_labels:
                 message += 'and label '
@@ -345,11 +355,12 @@ def calc_cws(contact_matrix_filename, chrom_name):
         ax.set_ylabel('CWS')
         ax.set_title(plot_header)
         plt.savefig(output_png_filename)
+        ax.cla()
         print 'Finish.'
         stdout.flush()
        
         if borders_filename != None:
-           # plot TAD border scores vs CWS plot
+            # Plot TAD border scores vs CWS plot
             print "Generate PNG file with 'TAD border scores vs CWS' plot for chromosome", \
                   chrom_name, "...",
             stdout.flush()
@@ -368,9 +379,62 @@ def calc_cws(contact_matrix_filename, chrom_name):
             ax.set_ylabel('CWS')
             ax.set_title(boxplot_header)
             plt.savefig(output_png_boxplot)
+            ax.cla()
             print 'Finish.'
             stdout.flush()
 
+        if borders_filename != None:
+            # Plot TAD border counts in CWS local minimums and out of them
+            print 'Plot TAD border counts in CWS local minimums and out of them ...',
+            stdout.flush()
+            with open(borders_filename, 'r') as borders:
+                tad_border_coords = []
+                tad_border_scores = []
+                for i, line in enumerate(borders):
+                    if i == 0:
+                        continue # leave out the header
+                    line_fields = line.rstrip('\n').split('\t')
+                    border_coord = (int(line_fields[1]) + int(line_fields[2])) / 2
+                    border_score = int(line_fields[4])
+                    tad_border_coords.append(border_coord)
+                    tad_border_scores.append(border_score)
+                tad_border_numbers = [coord / matrix_resolution - 1 for coord in tad_border_coords]
+                tad_border_cws = [result[border_number] for border_number in tad_border_numbers]
+                # Count borders in CWS local minimums and out of them 
+                borders_in_mins = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
+                borders_out_mins = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
+                for cws, score, number in zip(tad_border_cws, tad_border_scores, tad_border_numbers):
+                    if number > 0 and number < len(result) - 1:
+                        if cws < result[number - 1] and cws < result[number + 1]:
+                            borders_in_mins[score] += 1
+                        else:
+                            borders_out_mins[score] += 1
+                # Plot borders_in_mins and borders_out_mins
+                in_mins = tuple(value for key, value in borders_in_mins.items())
+                ind = numpy.arange(10) # the x locations for the groups
+                width = 0.35        # the width of the bars
+                rects1 = ax.bar(ind, in_mins, width, color = 'r')
+                out_mins = tuple(value for key, value in borders_out_mins.items())
+                rects2 = ax.bar(ind + width, out_mins, width, color = 'y')
+                ax.set_xlabel('Scores')
+                ax.set_ylabel('Number of TAD borders')
+                barplot_header = 'Number of TAD borders in and out of CWS local mins for ' \
+                                 + chrom_name + '. Vicinity:'
+                if vicinity_size != -1:
+                    barplot_header += ' ' + bp_to_KMbp(vicinity_size)
+                else:
+                    barplot_header += ' whole ' + chrom_name
+                ax.set_title(barplot_header)
+                ax.set_xticks(ind + width)
+                ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+                ax.legend((rects1[0], rects2[0]), ('In local mins', 'Out of local mins'), loc='upper left')
+                ax.legend()
+                autolabel(rects1, ax)
+                autolabel(rects2, ax)
+                plt.savefig(output_png_barplot)
+                ax.cla()
+            print 'Finish.'
+            stdout.flush()
 
 def get_chrom_name(matrix_filename):
     with open(matrix_filename, 'r') as src:
@@ -380,7 +444,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 0.6')
+    arguments = docopt(__doc__, version='calc_cws 0.7')
 
     try:
         matrix_resolution = int(arguments["-r"])
