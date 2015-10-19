@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
-Generate BED files with TAD coordinates from contact matrices (or one contact matrix).
-For TADs search TADbit library is used.
+Generate BED files with TAD coordinates from contact matrices 
+(or one contact matrix). For TADs search TADbit library is used.
+TADs can be called from one Hi-C experiment or several Hi-C 
+experiments for the same chromosomes.
 
 Usage:
   call_tads.py (-m <contact_matrix> [-c <chromosome_name>] | -d <input_directory>) -r <matrix_resolution> [-t <thread_number> -n <track_name_for_all_TADs> -o <output_directory>] 
