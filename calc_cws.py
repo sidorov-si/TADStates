@@ -7,7 +7,7 @@ and a genome is split into back-to-back windows).
 CWS of a border is a number of contacts that cross the border. If vicinity_size 
 is set then during CWS calculation only those contacts are considered 
 that connect regions (vicinity_size / 2) bp upstream and downstream 
-the border. Othewise, CWS is calculated across the whole chromosome.
+the border. Otherwise, CWS is calculated across the whole chromosome.
 Vicinity size must be a multiple of (2 * matrix_resolution).
 
 For each chromosome a BED file is created with all border CWS values.
@@ -17,7 +17,8 @@ into correspondent PNG file.
 
 Either a BED file with TADs or a BED file with TAD borders can be set
 as input. In the latter case, border scores will be showed in the plot,
-unless --no-labels option is set.
+unless --no-labels option is set. Zero Avg CWS on Scores vs Avg CWS plot 
+most probably means that there are no TAD borders with such score.
 
 With -R option you can set a specific region within the chromosome. 
 Only this region will be plotted. Coordinates must be set in bp and 
@@ -121,15 +122,15 @@ def autolabel(rects, ax):
 
 def calc_cws(contact_matrix_filename, chrom_name):
     print
-    print 'Contact matrix file:              ', contact_matrix_filename
-    print 'Matrix resolution:                ', bp_to_KMbp(matrix_resolution)
-    print 'BED track name:                   ', track_name
+    print 'Contact matrix file:                ', contact_matrix_filename
+    print 'Matrix resolution:                  ', bp_to_KMbp(matrix_resolution)
+    print 'BED track name:                     ', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:                    ', bp_to_KMbp(vicinity_size)
+        print 'Vicinity size:                      ', bp_to_KMbp(vicinity_size)
     else:
-        print 'Vicinity size:                     The whole chromosome.'
+        print 'Vicinity size:                       The whole chromosome.'
     stdout.flush()
-    print 'Region to plot:                   ',
+    print 'Region to plot:                     ',
     if start_coord == None and end_coord == None:
         print 'The whole chromosome.'
     else:
@@ -144,13 +145,15 @@ def calc_cws(contact_matrix_filename, chrom_name):
     output_bedgraph_filename = join(bed_directory, chrom_id + '_CWS.bedGraph')
     filename_list.append(output_bed_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
-    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png')
+    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png') 
+    output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg.png')
     output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins.png')
-    print 'Output BED file:                  ', output_bed_filename
-    print 'Output BedGraph file:             ', output_bedgraph_filename
-    print 'Output PNG file (CWS):            ', output_png_filename
-    print 'Output PNG file (Scores vs CWS):  ', output_png_boxplot
-    print 'Output PNG file (Borders in mins):', output_png_barplot
+    print 'Output BED file:                    ', output_bed_filename
+    print 'Output BedGraph file:               ', output_bedgraph_filename
+    print 'Output PNG file (CWS):              ', output_png_filename
+    print 'Output PNG file (Scores vs CWS):    ', output_png_boxplot
+    print 'Output PNG file (Scores vs Avg CWS):', output_png_avgplot
+    print 'Output PNG file (Borders in mins):  ', output_png_barplot
     stdout.flush()
 
     # Calculate CWS for all borders between windows
@@ -247,8 +250,8 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 border_name = str(cws_value)
                 # Coordinates in BedGraph format are 0-based, 
                 # and a region is presented by [x,y) interval.
-                start_pos = (border_number + 1) * matrix_resolution - 100
-                end_pos = (border_number + 1) * matrix_resolution + 100
+                start_pos = (border_number + 1) * matrix_resolution - 1
+                end_pos = (border_number + 1) * matrix_resolution + 1
                 score = cws_value
                 bedgraph_line = chrom_name + '\t' + str(start_pos) + '\t' + str(end_pos) + '\t' + \
                            str(score)
@@ -360,7 +363,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
         stdout.flush()
        
         if borders_filename != None:
-            # Plot TAD border scores vs CWS plot
+            # Plot TAD border scores vs CWS (boxplot)
             print "Generate PNG file with 'TAD border scores vs CWS' plot for chromosome", \
                   chrom_name, "...",
             stdout.flush()
@@ -379,6 +382,34 @@ def calc_cws(contact_matrix_filename, chrom_name):
             ax.set_ylabel('CWS')
             ax.set_title(boxplot_header)
             plt.savefig(output_png_boxplot)
+            ax.cla()
+            print 'Finish.'
+            stdout.flush()
+
+        if borders_filename != None:
+            # Plot TAD border scores vs avg CWS 
+            print "Generate PNG file with 'TAD border scores vs avg CWS' plot for chromosome", \
+                  chrom_name, "...",
+            stdout.flush()
+            avgplot_data = []
+            for score in range(1, 11):
+                current_cws = [cws for cws, border_score in zip(tad_border_cws, tad_border_scores) \
+                                   if border_score == score]
+                if len(current_cws) != 0:
+                    avg_cws = sum(current_cws) / len(current_cws)
+                else:
+                    avg_cws = 0
+                avgplot_data.append(avg_cws)
+            ax.plot(range(1, 11), avgplot_data, '.-')
+            avgplot_header = 'TAD border scores vs avg CWS for ' + chrom_name + '. Vicinity:'
+            if vicinity_size != -1:
+                avgplot_header += ' ' + bp_to_KMbp(vicinity_size)
+            else:
+                avgplot_header += ' whole ' + chrom_name
+            ax.set_xlabel('TAD border scores, bp')
+            ax.set_ylabel('Avg CWS')
+            ax.set_title(avgplot_header)
+            plt.savefig(output_png_avgplot)
             ax.cla()
             print 'Finish.'
             stdout.flush()
