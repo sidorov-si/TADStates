@@ -6,7 +6,8 @@ TADs can be called from one Hi-C experiment or several Hi-C
 experiments for the same chromosomes.
 
 Usage:
-  call_tads.py (-m <contact_matrix> [-c <chromosome_name>] | -d <input_directory>) -r <matrix_resolution> [-t <thread_number> -n <track_name_for_all_TADs> -o <output_directory>] 
+  call_tads.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -t <thread_number> -o <output_directory] 
+  call_tads.py -d <input_directory> -r <matrix_resolution> [-n <track_name_for_all_TADs> -t <thread_number> -o <output_directory>] 
 
 Options:
   -h --help                     Show this screen.
