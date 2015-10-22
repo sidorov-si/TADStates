@@ -14,7 +14,7 @@ All files contained in the input directory or directories are
 considered to be contact matrix files.
 
 Usage:
-  call_tads.py -m <contact_matrix_list> -r <matrix_resolution> [-c <chromosome_name> -t <thread_number> -o <output_directory] 
+  call_tads.py -m <contact_matrix_list> -r <matrix_resolution> [-c <chromosome_name> -t <thread_number> -o <output_directory>] 
   call_tads.py -d <input_directories_list> -r <matrix_resolution> [-n <track_name_for_all_TADs> -t <thread_number> -o <output_directory>] 
 
 Options:
