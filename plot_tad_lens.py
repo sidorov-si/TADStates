@@ -7,7 +7,7 @@ Usage:
 Options:
   -h --help               Show this screen.
   --version               Show version.
-  -i <tad_bedfiles_lis>   One TADs BED filename or several TADs BED filenames separated by comma.
+  -i <tad_bedfiles_list>  One TADs BED filename or several TADs BED filenames separated by comma.
   --header <plot_header>  The header for the plot. Default: 'TADs length boxplot'.
   -l <lables_list>        The list of labels for boxes on the plot. Default: '1','2','3',... .
   -o <output_filename>    The output file for the boxplot. Default: 'TAD_lens_boxplot.png'.

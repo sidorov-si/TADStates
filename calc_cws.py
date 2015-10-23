@@ -26,7 +26,6 @@ be multiples of matrix resolution.
 
 Usage:
   calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size>] 
-
   calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BED> -O <output_whole_genome_BED_file> -o <output_directory> -e <vicinity_size>]
 
 Options:
