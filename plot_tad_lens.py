@@ -2,7 +2,7 @@
 
 """
 Usage:
-  plot_tad_lens.py -i <tad_bedfiles_list> [--header <plot_header> -l <labels_list> -o <output_filename>] 
+  plot_tad_lens.py -i <tad_bedfiles_list> [--header <plot_header> -l <labels_list> -o <output_filename> --no-fliers --show-means] 
 
 Options:
   -h --help               Show this screen.
@@ -11,6 +11,8 @@ Options:
   --header <plot_header>  The header for the plot. Default: 'TADs length boxplot'.
   -l <lables_list>        The list of labels for boxes on the plot. Default: '1','2','3',... .
   -o <output_filename>    The output file for the boxplot. Default: 'TAD_lens_boxplot.png'.
+  --no-fliers             Don't plot outliers.
+  --show-means            Plot mean values.
 """
 
 import sys
@@ -41,7 +43,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename):
+def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fliers, show_means):
     print "Create TAD length boxplot for the following files:"
     stdout.flush()
     for bed_filename in bed_filenames:
@@ -49,6 +51,8 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename):
     print
     stdout.flush()
     print "Plot header:", plot_header
+    print "Plot outliers:", 'Yes' if not no_fliers else 'No'
+    print "Plot means:", 'Yes' if show_means else 'No'
     print
     stdout.flush()
     print "TAD labels:"
@@ -79,8 +83,8 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename):
                 tad_lens.append(end_coord - start_coord)
             boxplot_data.append(tad_lens[:])
             del(tad_lens[:])
- 
-    ax.boxplot(boxplot_data, labels = tad_labels, sym = 'b.', whis = [5, 95])
+    sym = '' if no_fliers else 'b.'
+    ax.boxplot(boxplot_data, labels = tad_labels, showmeans = show_means, sym = sym, whis = [5, 95])
     ax.set_ylabel('TAD length, bp')
     ax.set_title(plot_header)
     plt.savefig(output_filename)
@@ -89,7 +93,7 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='plot_tad_lens 0.1')
+    arguments = docopt(__doc__, version='plot_tad_lens 0.3')
     bed_filenames = arguments["-i"].split(",")
     for bed_filename in bed_filenames:
         if not exists(bed_filename):
@@ -120,6 +124,16 @@ if __name__ == '__main__':
     else:
         output_filename = 'TAD_lens_boxplot.png'
 
-    plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename)
+    if arguments["--no-fliers"]:
+        no_fliers = True
+    else:
+        no_fliers = False
+
+    if arguments["--show-means"]:
+        show_means = True
+    else:
+        show_means = False
+
+    plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fliers, show_means)
     print 'Processing is finished.'
 
