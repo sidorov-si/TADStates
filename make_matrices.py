@@ -58,6 +58,7 @@ from os.path import join
 from os.path import exists
 from os.path import isfile
 from os import rename
+from os import remove
 from sys import stdout
 
 
