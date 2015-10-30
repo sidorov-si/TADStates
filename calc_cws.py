@@ -84,11 +84,11 @@ import matplotlib.pyplot as plt
 def bp_to_KMbp(bp_count):
     if bp_count % 1000 == 0:
         if bp_count % 1000000 == 0:
-	    return str(bp_count / 1000000) + ' Mbp'
+	    return str(bp_count / 1000000) + 'Mbp'
         else:
-            return str(bp_count / 1000) + ' Kbp'
+            return str(bp_count / 1000) + 'Kbp'
     else:
-        return str(bp_count) + ' bp'
+        return str(bp_count) + 'bp'
 
 
 def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_scores, \
@@ -140,13 +140,19 @@ def calc_cws(contact_matrix_filename, chrom_name):
         chrom_id = 'chr' + chrom_number
     else:
         chrom_id = chrom_name
-    output_bedgraph_filename = join(bedgraph_directory, chrom_id + '_CWS.bedGraph')
+    output_bedgraph_filename = join(bedgraph_directory, chrom_id + '_CWS' + '_vic' + \
+                                    bp_to_KMbp(vicinity_size) + '.bedGraph')
     filename_list.append(output_bedgraph_filename)
-    output_png_filename = join(png_directory, chrom_id + '_CWS.png')
-    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png') 
-    output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg.png')
-    output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins.png')
-    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins_vic.png')
+    output_png_filename = join(png_directory, chrom_id + '_CWS' + '_vic' + \
+                               bp_to_KMbp(vicinity_size) +'.png')
+    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS' + '_vic' + \
+                              bp_to_KMbp(vicinity_size) + '.png') 
+    output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg' + '_vic' + \
+                              bp_to_KMbp(vicinity_size) + '.png')
+    output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
+                              bp_to_KMbp(vicinity_size) + '.png')
+    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
+                                  bp_to_KMbp(vicinity_size) + '.png')
     print 'Output BedGraph file:               ', output_bedgraph_filename
     print 'Output PNG file (CWS):              ', output_png_filename
     print 'Output PNG file (Scores vs CWS):    ', output_png_boxplot
@@ -157,7 +163,6 @@ def calc_cws(contact_matrix_filename, chrom_name):
 
     # Calculate CWS for all borders between windows
     with open(contact_matrix_filename, 'r') as infile:
-        print
         print 'Calculate CWS for chromosome', chrom_name, '...',
         stdout.flush()
         header = infile.readline()
@@ -494,9 +499,9 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 plt.savefig(output_png_barplot_vic)
                 ax.cla()
  
-
             print 'Finish.'
             stdout.flush()
+
 
 def get_chrom_name(matrix_filename):
     with open(matrix_filename, 'r') as src:
@@ -516,6 +521,21 @@ if __name__ == '__main__':
     if matrix_resolution <= 0:
         print "Error: Matrix resolution must be an integer greater than 0. Exit.\n"
         sys.exit(1)
+
+    if arguments["-e"] != None:
+        try:
+            vicinity_size = int(arguments["-e"])
+        except ValueError:
+            print "Error: Vicinity size must be an integer greater than 0. Exit.\n"
+            sys.exit(1)
+        if vicinity_size <= 0:
+            print "Error: Vicinity size must be an integer greater than 0. Exit.\n"
+            sys.exit(1)
+        if not vicinity_size % (2 * matrix_resolution) == 0:
+            print "Error: Vicinity size must be a multiple of (2 * matrix_resolution). Exit.\n"
+            sys.exit(1)
+    else:
+        vicinity_size = -1
 
     if arguments["-m"] != None:
         matrix_filename = arguments["-m"]
@@ -637,11 +657,12 @@ if __name__ == '__main__':
         if arguments["-N"] != None:
             all_track_name = arguments["-N"]
         else:
-            all_track_name = "All_border_CWS"
+            all_track_name = "All_border_CWS" + '_vic' +  bp_to_KMbp(vicinity_size)
         if arguments["-O"] != None:
             output_wg_bedgraph_filename = arguments["-O"]
         else:
-            output_wg_bedgraph_filename = 'All_borders_CWS.bed'
+            output_wg_bedgraph_filename = 'All_borders_CWS' + '_vic' + \
+                                          bp_to_KMbp(vicinity_size) + '.bed'
 
     if arguments["-o"] != None:
         output_directory = arguments["-o"].rstrip('/')
@@ -650,20 +671,9 @@ if __name__ == '__main__':
             output_directory = input_directory + '_CWS'
         else:
             output_directory = ''
-    if arguments["-e"] != None:
-        try:
-            vicinity_size = int(arguments["-e"])
-        except ValueError:
-            print "Error: Vicinity size must be an integer greater than 0. Exit.\n"
-            sys.exit(1)
-        if vicinity_size <= 0:
-            print "Error: Vicinity size must be an integer greater than 0. Exit.\n"
-            sys.exit(1)
-        if not vicinity_size % (2 * matrix_resolution) == 0:
-            print "Error: Vicinity size must be a multiple of (2 * matrix_resolution). Exit.\n"
-            sys.exit(1)
-    else:
-        vicinity_size = -1
+
+    if arguments["-O"] == None:
+        output_wg_bedgraph_filename = join(output_directory, output_wg_bedgraph_filename)
 
     filename_list = []
     if output_directory != '':
@@ -700,11 +710,10 @@ if __name__ == '__main__':
         if chrom_name == None:
             chrom_name = get_chrom_name(matrix_filename)
         if track_name == None:
-            track_name = chrom_name + '_CWS'
+            track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size)
         bedgraph_track_name = track_name + '_bedGraph'
         calc_cws(matrix_filename, chrom_name)
     else: # there is a directory with matrices
-        print
         print 'Calculate CWS for all chromosomes in the input directory...'
         stdout.flush()
         files = listdir(input_directory)
@@ -712,7 +721,7 @@ if __name__ == '__main__':
             if splitext(basename(file))[1] == '.mat':
                 matrix_file_full = join(input_directory, file)
                 chrom_name = get_chrom_name(matrix_file_full)
-                track_name = chrom_name + '_CWS'
+                track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size)
                 bedgraph_track_name = track_name + '_bedGraph'
                 calc_cws(matrix_file_full, chrom_name)
         print 
@@ -721,7 +730,6 @@ if __name__ == '__main__':
         # merge BedGraph files for individual chromosomes in one BedGraph file
         print 'Generate whole genome BED file with CWS...',
         stdout.flush()
-        genome_bed_filename = join(bedgraph_directory, output_wg_bedgraph_filename)
         with open(output_wg_bedgraph_filename, 'w') as dst:
             track_line = 'track name="' + all_track_name + '" visibility=1 itemRgb="On"'
             dst.write(track_line + '\n')
