@@ -25,7 +25,7 @@ Only this region will be plotted. Coordinates must be set in bp and
 be multiples of matrix resolution.
 
 Usage:
-  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size> -s <name_suffix>]
+  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size> -s <name_suffix>]
   calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BedGraph> -O <whole_genome_BedGraph_filename> -o <output_directory> -e <vicinity_size> -s <name_suffix>]
 
 Options:
@@ -38,7 +38,6 @@ Options:
   -e <vicinity_size>                         Vicinity size, bp. Default: CWS is calculated across the whole genome.
   -n <track_name>                            A name for the track for one chromosome. Default: 'chromosome_name'_CWS
   -R <chromosome_region>                     A region on a chromosome (a:b = [a,b]; :b = [matrix_resolution,b]; a: = [a, chromosome_end]; : = the whole chromosome; a, b are set in bp, a < b, a and b are multiples of matrix_resolution).
-  -T <BED_file_with_TADs>                    BED file with TADs. TAD border coordinates are brought from there.
   -B <BED_file_with_TAD_borders>             BED file with scored TAD borders. 'Score' field must present a border score.
   -N <track_name_for_whole_genome_BedGraph>  A track name for the whole genome BedGraph. Default: Whole_genome_CWS.
   -o <output_directory>                      Output directory name. Default: directory that contains this script.
@@ -247,7 +246,7 @@ def calc_cws(contact_matrix_filename, chrom_name):
         stdout.flush()
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        if tads_filename == None:
+        if borders_filename == None:
             plot_header = 'CWS for ' + chrom_name
         else:
             plot_header = 'CWS for ' + chrom_name + ' with TAD borders'
@@ -274,25 +273,6 @@ def calc_cws(contact_matrix_filename, chrom_name):
         print 'Finish.'
         stdout.flush()
 
-        if tads_filename != None:
-            # Plot TAD borders
-            print 'Plot TAD borders for chromosome', chrom_name, '...',
-            stdout.flush()
-            with open(tads_filename, 'r') as tads:
-                tad_border_coords = []
-                for i, line in enumerate(tads):
-                    if i == 0:
-                        continue # leave out the header
-                    line_fields = line.rstrip('\n').split('\t')
-                    border_coord = int(line_fields[2])
-                    tad_border_coords.append(border_coord)
-                tad_border_coords.pop()
-                tad_border_numbers = [coord / matrix_resolution - 1 for coord in tad_border_coords]
-                tad_border_cws = [result[border_number] for border_number in tad_border_numbers]
-                ax.plot(tad_border_coords, tad_border_cws, '.', color = 'red', ms = 10)
-            print 'Finish.'
-            stdout.flush()
-            
         if borders_filename != None:
             # Plot TAD borders colored according to their scores
             message = 'Color '
@@ -611,18 +591,6 @@ if __name__ == '__main__':
             start_coord = None
             end_coord = None
 
-        tads_filename = None
-        if arguments["-T"] != None:
-            tads_filename = arguments["-T"]
-            if not exists(tads_filename):
-                print "Error: Can't find BED file with TADs: no such file '" + \
-                      tads_filename + "'. Exit.\n"
-                sys.exit(1)
-            if not isfile(tads_filename):
-                print "Error: BED file with TADs must be a regular file. " + \
-                      "Something else given. Exit.\n"
-                sys.exit(1)
-
         borders_filename = None
         no_labels = None
         if arguments["-B"] != None:
@@ -646,7 +614,6 @@ if __name__ == '__main__':
     else:
         matrix_filename = None
         chrom_name = None
-        tads_filename = None
         borders_filename = None
         no_labels = None
         start_coord = None
@@ -668,7 +635,7 @@ if __name__ == '__main__':
             output_wg_bedgraph_filename = arguments["-O"]
         else:
             output_wg_bedgraph_filename = 'All_borders_CWS' + '_vic' + \
-                                          bp_to_KMbp(vicinity_size) + name_suffix +  '.bed'
+                                          bp_to_KMbp(vicinity_size) + name_suffix + '.bedGraph'
 
     if arguments["-o"] != None:
         output_directory = arguments["-o"].rstrip('/')
@@ -678,7 +645,7 @@ if __name__ == '__main__':
         else:
             output_directory = ''
 
-    if arguments["-O"] == None:
+    if arguments["-O"] == None and output_wg_bedgraph_filename != None:
         output_wg_bedgraph_filename = join(output_directory, output_wg_bedgraph_filename)
 
     filename_list = []
@@ -696,13 +663,10 @@ if __name__ == '__main__':
     if input_directory != None:
         print 'Input directory:', input_directory
         stdout.flush()
-    if tads_filename != None:
-        print 'BED file with TADs:', tads_filename
-        stdout.flush()
     if borders_filename != None:
         print 'BED file with TAD borders:', borders_filename
         stdout.flush()
-    if output_directory != None:
+    if output_directory != None and output_directory != '':
         print 'Output directory:', output_directory
         stdout.flush()
     if output_wg_bedgraph_filename != None:
