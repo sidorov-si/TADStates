@@ -25,8 +25,8 @@ Only this region will be plotted. Coordinates must be set in bp and
 be multiples of matrix resolution.
 
 Usage:
-  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size>] 
-  calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BedGraph> -O <whole_genome_BedGraph_filename> -o <output_directory> -e <vicinity_size>]
+  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size> -s <name_suffix>]
+  calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BedGraph> -O <whole_genome_BedGraph_filename> -o <output_directory> -e <vicinity_size> -s <name_suffix>]
 
 Options:
   -h --help                                  Show this screen.
@@ -43,6 +43,7 @@ Options:
   -N <track_name_for_whole_genome_BedGraph>  A track name for the whole genome BedGraph. Default: Whole_genome_CWS.
   -o <output_directory>                      Output directory name. Default: directory that contains this script.
   -O <whole_genome_BedGraph_filename>        Output whole genome BedGraph filename. Is also put in the output directory.
+  -s <name_suffix>                           Suffix that will be added to all filenames and tracknames. It should contain only symbols allowed for filenames. Default: ''.
   --no-labels                                Do not label each TAD border with its score.
 """
 
@@ -141,18 +142,18 @@ def calc_cws(contact_matrix_filename, chrom_name):
     else:
         chrom_id = chrom_name
     output_bedgraph_filename = join(bedgraph_directory, chrom_id + '_CWS' + '_vic' + \
-                                    bp_to_KMbp(vicinity_size) + '.bedGraph')
+                                    bp_to_KMbp(vicinity_size) + name_suffix + '.bedGraph')
     filename_list.append(output_bedgraph_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS' + '_vic' + \
-                               bp_to_KMbp(vicinity_size) +'.png')
+                               bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + '.png') 
+                              bp_to_KMbp(vicinity_size) + name_suffix + '.png') 
     output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + '.png')
+                              bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + '.png')
-    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
-                                  bp_to_KMbp(vicinity_size) + '.png')
+                              bp_to_KMbp(vicinity_size) + name_suffix + '.png')
+    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins' + \
+                                  '_vic' + bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     print 'Output BedGraph file:               ', output_bedgraph_filename
     print 'Output PNG file (CWS):              ', output_png_filename
     print 'Output PNG file (Scores vs CWS):    ', output_png_boxplot
@@ -537,6 +538,11 @@ if __name__ == '__main__':
     else:
         vicinity_size = -1
 
+    if arguments["-s"] != None:
+        name_suffix = arguments["-s"]
+    else:
+        name_suffix = ''
+
     if arguments["-m"] != None:
         matrix_filename = arguments["-m"]
         if not exists(matrix_filename):
@@ -657,12 +663,12 @@ if __name__ == '__main__':
         if arguments["-N"] != None:
             all_track_name = arguments["-N"]
         else:
-            all_track_name = "All_border_CWS" + '_vic' +  bp_to_KMbp(vicinity_size)
+            all_track_name = "All_border_CWS" + '_vic' +  bp_to_KMbp(vicinity_size) + name_suffix 
         if arguments["-O"] != None:
             output_wg_bedgraph_filename = arguments["-O"]
         else:
             output_wg_bedgraph_filename = 'All_borders_CWS' + '_vic' + \
-                                          bp_to_KMbp(vicinity_size) + '.bed'
+                                          bp_to_KMbp(vicinity_size) + name_suffix +  '.bed'
 
     if arguments["-o"] != None:
         output_directory = arguments["-o"].rstrip('/')
@@ -705,12 +711,15 @@ if __name__ == '__main__':
     if all_track_name != None:
         print 'Whole genome BedGraph track name:', all_track_name
         stdout.flush()
+    if name_suffix != '':
+        print 'Suffix for all filenames and tracknames:', name_suffix
+
 
     if matrix_filename != None: # there is only one contact matrix
         if chrom_name == None:
             chrom_name = get_chrom_name(matrix_filename)
         if track_name == None:
-            track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size)
+            track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size) + name_suffix
         bedgraph_track_name = track_name + '_bedGraph'
         calc_cws(matrix_filename, chrom_name)
     else: # there is a directory with matrices
@@ -721,14 +730,14 @@ if __name__ == '__main__':
             if splitext(basename(file))[1] == '.mat':
                 matrix_file_full = join(input_directory, file)
                 chrom_name = get_chrom_name(matrix_file_full)
-                track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size)
+                track_name = chrom_name + '_CWS' + '_vic' + bp_to_KMbp(vicinity_size) + name_suffix
                 bedgraph_track_name = track_name + '_bedGraph'
                 calc_cws(matrix_file_full, chrom_name)
         print 
         print 'All chromosomes are processed.'
         stdout.flush()
         # merge BedGraph files for individual chromosomes in one BedGraph file
-        print 'Generate whole genome BED file with CWS...',
+        print 'Generate whole genome BedGraph file with CWS...',
         stdout.flush()
         with open(output_wg_bedgraph_filename, 'w') as dst:
             track_line = 'track name="' + all_track_name + '" visibility=1 itemRgb="On"'
@@ -739,6 +748,9 @@ if __name__ == '__main__':
                         if i == 0:
                             continue
                         dst.write(line)
+        print 'Finish.'
+        stdout.flush()
+
     print 'Processing is finished.'
     stdout.flush()
 
