@@ -62,6 +62,7 @@ from re import search
 
 
 def call_tads(matrix_filenames, chrom_name):
+    print
     print "Call TADs for chromosome " + chrom_name + '...'
     print "Contact matrices: "
     for matrix_filename in matrix_filenames:
