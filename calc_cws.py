@@ -26,24 +26,24 @@ be multiples of matrix resolution.
 
 Usage:
   calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-T <BED_file_with_TADs> | -B <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size>] 
-  calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BED> -O <output_whole_genome_BED_file> -o <output_directory> -e <vicinity_size>]
+  calc_cws.py -d <input_directory> -r <matrix_resolution> [-N <track_name_for_whole_genome_BedGraph> -O <whole_genome_BedGraph_filename> -o <output_directory> -e <vicinity_size>]
 
 Options:
-  -h --help                             Show this screen.
-  --version                             Show version.
-  -m <contact_matrix>                   File with contact matrix.
-  -d <input_directory>                  Directory with contact matrices (.mat-files).
-  -c <chromosome_name>                  Name of the chromosome. Determined from matrix file by default.
-  -r <matrix_resolution>                Matrix resolution.
-  -e <vicinity_size>                    Vicinity size, bp. Default: CWS is calculated across the whole genome.
-  -n <track_name>                       A name for the track for one chromosome. Default: 'chromosome_name'_CWS
-  -R <chromosome_region>                A region on a chromosome (a:b = [a,b]; :b = [matrix_resolution,b]; a: = [a, chromosome_end]; : = the whole chromosome; a, b are set in bp, a < b, a and b are multiples of matrix_resolution).
-  -T <BED_file_with_TADs>               BED file with TADs. TAD border coordinates are brought from there.
-  -B <BED_file_with_TAD_borders>        BED file with scored TAD borders. 'Score' field must present a border score.
-  -N <track_name_for_whole_genome_BED>  A name for the track with all TADs. Default: All_TADs.
-  -o <output_directory>                 Output directory name. Default: directory that contains this script.
-  -O <output_whole_genome_BED_file>     Output whole genome BED file. Is also put in the output directory. Default: generated out of the contact matrix filename.
-  --no-labels                           Do not label each TAD border with its score.
+  -h --help                                  Show this screen.
+  --version                                  Show version.
+  -m <contact_matrix>                        File with contact matrix.
+  -d <input_directory>                       Directory with contact matrices (.mat-files).
+  -c <chromosome_name>                       Name of the chromosome. Determined from matrix file by default.
+  -r <matrix_resolution>                     Matrix resolution.
+  -e <vicinity_size>                         Vicinity size, bp. Default: CWS is calculated across the whole genome.
+  -n <track_name>                            A name for the track for one chromosome. Default: 'chromosome_name'_CWS
+  -R <chromosome_region>                     A region on a chromosome (a:b = [a,b]; :b = [matrix_resolution,b]; a: = [a, chromosome_end]; : = the whole chromosome; a, b are set in bp, a < b, a and b are multiples of matrix_resolution).
+  -T <BED_file_with_TADs>                    BED file with TADs. TAD border coordinates are brought from there.
+  -B <BED_file_with_TAD_borders>             BED file with scored TAD borders. 'Score' field must present a border score.
+  -N <track_name_for_whole_genome_BedGraph>  A track name for the whole genome BedGraph. Default: Whole_genome_CWS.
+  -o <output_directory>                      Output directory name. Default: directory that contains this script.
+  -O <whole_genome_BedGraph_filename>        Output whole genome BedGraph filename. Is also put in the output directory.
+  --no-labels                                Do not label each TAD border with its score.
 """
 
 import sys
@@ -121,15 +121,15 @@ def autolabel(rects, ax):
 
 def calc_cws(contact_matrix_filename, chrom_name):
     print
-    print 'Contact matrix file:                ', contact_matrix_filename
-    print 'Matrix resolution:                  ', bp_to_KMbp(matrix_resolution)
-    print 'BED track name:                     ', track_name
+    print 'Contact matrix file:', contact_matrix_filename
+    print 'Matrix resolution:', bp_to_KMbp(matrix_resolution)
+    print 'BedGraph track name:', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:                      ', bp_to_KMbp(vicinity_size)
+        print 'Vicinity size:', bp_to_KMbp(vicinity_size)
     else:
-        print 'Vicinity size:                       The whole chromosome.'
+        print 'Vicinity size: The whole chromosome.'
     stdout.flush()
-    print 'Region to plot:                     ',
+    print 'Region to plot:',
     if start_coord == None and end_coord == None:
         print 'The whole chromosome.'
     else:
@@ -140,19 +140,19 @@ def calc_cws(contact_matrix_filename, chrom_name):
         chrom_id = 'chr' + chrom_number
     else:
         chrom_id = chrom_name
-    output_bed_filename = join(bed_directory, chrom_id + '_CWS.bed')
-    output_bedgraph_filename = join(bed_directory, chrom_id + '_CWS.bedGraph')
-    filename_list.append(output_bed_filename)
+    output_bedgraph_filename = join(bedgraph_directory, chrom_id + '_CWS.bedGraph')
+    filename_list.append(output_bedgraph_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS.png')
     output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS.png') 
     output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg.png')
     output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins.png')
-    print 'Output BED file:                    ', output_bed_filename
+    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins_vic.png')
     print 'Output BedGraph file:               ', output_bedgraph_filename
     print 'Output PNG file (CWS):              ', output_png_filename
     print 'Output PNG file (Scores vs CWS):    ', output_png_boxplot
     print 'Output PNG file (Scores vs Avg CWS):', output_png_avgplot
     print 'Output PNG file (Borders in mins):  ', output_png_barplot
+    print 'Output PNG file (Borders in mins):  ', output_png_barplot_vic
     stdout.flush()
 
     # Calculate CWS for all borders between windows
@@ -217,28 +217,6 @@ def calc_cws(contact_matrix_filename, chrom_name):
         print 'Finish.'
         stdout.flush()
         
-        # Generate BED file with CWS for all borders between windows
-        print 'Generate BED file with CWS for chromosome', chrom_name, '...',
-        stdout.flush()
-        with open(output_bed_filename, 'w') as dst:
-            track_line = 'track name="' + track_name + '" visibility=1 itemRgb="On"'
-            dst.write(track_line + '\n')
-            for border_number, cws_value in enumerate(result):
-                border_name = str(cws_value)
-                # Coordinates in BED format are 0-based, 
-                # and a region is presented by [x,y) interval.
-                start_pos = (border_number + 1) * matrix_resolution - 1
-                end_pos = (border_number + 1) * matrix_resolution
-                score = cws_value
-                strand = '.' # Just to fill in the field
-                color = '0,0,0' # black
-                bed_line = chrom_name + '\t' + str(start_pos) + '\t' + str(end_pos) + '\t' + \
-                           border_name + '\t' + str(score) + '\t' + strand + '\t' + \
-                           str(start_pos) + '\t' + str(end_pos) + '\t' + color
-                dst.write(bed_line + '\n')
-        print 'Finish.'
-        stdout.flush()
-
         # Generate BedGraph file with CWS for all borders between windows
         print 'Generate BedGraph file with CWS for chromosome', chrom_name, '...',
         stdout.flush()
@@ -463,6 +441,60 @@ def calc_cws(contact_matrix_filename, chrom_name):
                 autolabel(rects2, ax)
                 plt.savefig(output_png_barplot)
                 ax.cla()
+
+            # Plot TAD border counts in some vicinity of CWS local minimums and out of them
+            print 'Plot TAD border counts in a matrix-resolution vicinity of CWS local minimums and out of them ...',
+            stdout.flush()
+            with open(borders_filename, 'r') as borders:
+                tad_border_coords = []
+                tad_border_scores = []
+                for i, line in enumerate(borders):
+                    if i == 0:
+                        continue # leave out the header
+                    line_fields = line.rstrip('\n').split('\t')
+                    border_coord = (int(line_fields[1]) + int(line_fields[2])) / 2
+                    border_score = int(line_fields[4])
+                    tad_border_coords.append(border_coord)
+                    tad_border_scores.append(border_score)
+                tad_border_numbers = [coord / matrix_resolution - 1 for coord in tad_border_coords]
+                tad_border_cws = [result[border_number] for border_number in tad_border_numbers]
+                # Count borders in matrix-resolution of CWS local minimums and out of them 
+                borders_in_mins = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
+                borders_out_mins = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
+                for cws, score, number in zip(tad_border_cws, tad_border_scores, tad_border_numbers):
+                    if number > 1 and number < len(result) - 2:
+                        if cws < result[number - 1] and cws < result[number + 1] or \
+                           result[number - 1] < result[number - 2] and result[number - 1] < cws or \
+                           result[number + 1] < cws and result[number + 1] < result[number + 2]:
+                            borders_in_mins[score] += 1
+                        else:
+                            borders_out_mins[score] += 1
+                # Plot borders_in_mins and borders_out_mins
+                in_mins = tuple(value for key, value in borders_in_mins.items())
+                ind = numpy.arange(10) # the x locations for the groups
+                width = 0.35        # the width of the bars
+                rects1 = ax.bar(ind, in_mins, width, color = 'r')
+                out_mins = tuple(value for key, value in borders_out_mins.items())
+                rects2 = ax.bar(ind + width, out_mins, width, color = 'y')
+                ax.set_xlabel('Scores')
+                ax.set_ylabel('Number of TAD borders')
+                barplot_header = 'Number of TAD borders in and out of CWS local mins for ' \
+                                 + chrom_name + '. Vicinity:'
+                if vicinity_size != -1:
+                    barplot_header += ' ' + bp_to_KMbp(vicinity_size)
+                else:
+                    barplot_header += ' whole ' + chrom_name
+                ax.set_title(barplot_header)
+                ax.set_xticks(ind + width)
+                ax.set_xticklabels(('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+                ax.legend((rects1[0], rects2[0]), ('In local mins', 'Out of local mins'), loc='upper left')
+                ax.legend()
+                autolabel(rects1, ax)
+                autolabel(rects2, ax)
+                plt.savefig(output_png_barplot_vic)
+                ax.cla()
+ 
+
             print 'Finish.'
             stdout.flush()
 
@@ -474,7 +506,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 0.7')
+    arguments = docopt(__doc__, version='calc_cws 0.8')
 
     try:
         matrix_resolution = int(arguments["-r"])
@@ -583,7 +615,7 @@ if __name__ == '__main__':
                 no_labels = False
 
         input_directory = None
-        output_wg_bed_filename = None
+        output_wg_bedgraph_filename = None
         all_track_name = None
     else:
         matrix_filename = None
@@ -607,9 +639,9 @@ if __name__ == '__main__':
         else:
             all_track_name = "All_border_CWS"
         if arguments["-O"] != None:
-            output_wg_bed_filename = arguments["-O"]
+            output_wg_bedgraph_filename = arguments["-O"]
         else:
-            output_wg_bed_filename = 'All_borders_CWS.bed'
+            output_wg_bedgraph_filename = 'All_borders_CWS.bed'
 
     if arguments["-o"] != None:
         output_directory = arguments["-o"].rstrip('/')
@@ -637,30 +669,31 @@ if __name__ == '__main__':
     if output_directory != '':
         if not exists(output_directory):
             makedirs(output_directory)
-    bed_directory = join(output_directory, 'BED_CWS')
+    bedgraph_directory = join(output_directory, 'BedGraph_CWS')
     png_directory = join(output_directory, 'PNG_CWS')
-    if not exists(bed_directory):
-        makedirs(bed_directory)
+    if not exists(bedgraph_directory):
+        makedirs(bedgraph_directory)
     if not exists(png_directory):
         makedirs(png_directory)
 
+    print
     if input_directory != None:
-        print 'Input directory:             ', input_directory
+        print 'Input directory:', input_directory
         stdout.flush()
     if tads_filename != None:
-        print 'BED file with TADs:          ', tads_filename
+        print 'BED file with TADs:', tads_filename
         stdout.flush()
     if borders_filename != None:
-        print 'BED file with TAD borders:   ', borders_filename
+        print 'BED file with TAD borders:', borders_filename
         stdout.flush()
     if output_directory != None:
-        print 'Output directory:            ', output_directory
+        print 'Output directory:', output_directory
         stdout.flush()
-    if output_wg_bed_filename != None:
-        print 'Output whole genome BED file:', output_wg_bed_filename
+    if output_wg_bedgraph_filename != None:
+        print 'Output whole genome BedGraph file:', output_wg_bedgraph_filename
         stdout.flush()
     if all_track_name != None:
-        print 'Whole genome BED track name: ', all_track_name
+        print 'Whole genome BedGraph track name:', all_track_name
         stdout.flush()
 
     if matrix_filename != None: # there is only one contact matrix
@@ -685,11 +718,11 @@ if __name__ == '__main__':
         print 
         print 'All chromosomes are processed.'
         stdout.flush()
-        # merge BED files for individual chromosomes in one BED file
+        # merge BedGraph files for individual chromosomes in one BedGraph file
         print 'Generate whole genome BED file with CWS...',
         stdout.flush()
-        genome_bed_filename = join(bed_directory, output_wg_bed_filename)
-        with open(output_wg_bed_filename, 'w') as dst:
+        genome_bed_filename = join(bedgraph_directory, output_wg_bedgraph_filename)
+        with open(output_wg_bedgraph_filename, 'w') as dst:
             track_line = 'track name="' + all_track_name + '" visibility=1 itemRgb="On"'
             dst.write(track_line + '\n')
             for filename in sorted(filename_list):
