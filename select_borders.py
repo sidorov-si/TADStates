@@ -6,7 +6,7 @@ Borders with high score are called 'strong'. They tend to be conservative and en
 small amount of interactions to occur over them.
 
 Usage:
-  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-o <output_directory> -O <output_directory_for_total_track> --scores-as-names --color]
+  select_borders.py (-t <TADs_filename> -s <scores_filename> [-n <track_name>] | -T <TADs_directory> -S <scores_directory> [-N <track_name_for_all_borders> --all]) -w <border_width> -i <score_interval> [-x <name_suffix> -o <output_directory> -O <output_directory_for_total_track> --scores-as-names --color]
 
 Options:
   -h --help                              Show this screen.
@@ -22,6 +22,7 @@ Options:
   -i <score_interval>                    Score interval (a:b = [a,b]; :b = [1,b]; a: = [a, 10]; : = [1,10]; a,b in {1,2,...,10}, a <= b).
   -o <output_directory>                  Output directory.
   -O <output_directory_for_total_track>  Output directory for the track with all borders. (It is copied here from output directory).
+  -x <name_suffix>                       Suffix for all filenames and tracknames. Default: ''.
   --scores-as-names                      Set scores as border names.
   --color                                Color TAD borders according to their score.
 """
@@ -64,7 +65,7 @@ score_rgb_dict = {1:'0,0,255', 2:'0,255,255', 3:'0,255,170', 4:'0,255,0', \
 
 
 def select_borders(tads_filename, scores_filename, start_score, end_score, \
-                   chr_output_directory, half_width, scores_as_names):
+                   chr_output_directory, half_width, scores_as_names, name_suffix):
     name, ext = splitext(tads_filename)
     file_basename = basename(name)
     if chr_output_directory == '':
@@ -73,7 +74,7 @@ def select_borders(tads_filename, scores_filename, start_score, end_score, \
         file_name = file_basename
     output_filename = join(chr_output_directory, file_name + '_borders_' + \
                            str(border_width) + '_' + str(start_score) + \
-                           '-' + str(end_score) + '.bed')
+                           '-' + str(end_score) + name_suffix + '.bed')
     with open(tads_filename, 'r') as tads, open(scores_filename, 'r') as scores, \
          open(output_filename, 'w') as dst:
         tads_track_line = tads.readline()
@@ -162,6 +163,11 @@ if __name__ == '__main__':
             print "Error: End score must be an integer from {1,2,...,10}, >= start score. Exit.\n"
             sys.exit(1)
 
+    if arguments["-x"] != None:
+        name_suffix = arguments["-x"]
+    else:
+        name_suffix = ''
+
     if arguments["-t"] != None:
         tads_filename = arguments["-t"]
         if not exists(tads_filename):
@@ -186,7 +192,7 @@ if __name__ == '__main__':
             track_name = arguments["-n"]
         else:
             track_name = 'Borders_' + str(border_width) + '_' + str(start_score) + \
-                         '-' + str(end_score)
+                         '-' + str(end_score) + name_suffix
     else:
         tads_filename = None
         scores_filename = None
@@ -213,11 +219,12 @@ if __name__ == '__main__':
             track_name = arguments["-N"]
         else:
             track_name = 'All_borders_' + str(border_width) + '_' + str(start_score) + \
-                         '-' + str(end_score)
+                         '-' + str(end_score) + name_suffix
         if arguments["--all"]:
             all = True
         else:
             all = False
+
 
     if arguments["--scores-as-names"]:
         scores_as_names = True
@@ -252,7 +259,7 @@ if __name__ == '__main__':
 
     if tads_filename != None:
         select_borders(tads_filename, scores_filename, start_score, end_score, \
-                       chr_output_directory, half_width, scores_as_names)
+                       chr_output_directory, half_width, scores_as_names, name_suffix)
     else:
         files_list = sorted(listdir(tads_directory))
         if all:
@@ -265,12 +272,13 @@ if __name__ == '__main__':
             tads_full_path = join(tads_directory, tads)
             scores_full_path = join(scores_directory, scores)
             select_borders(tads_full_path, scores_full_path, start_score, end_score, \
-                           chr_output_directory, half_width, scores_as_names)
+                           chr_output_directory, half_width, scores_as_names, name_suffix)
         # merge BED files for individual chromosomes in one BED file
         filename_list = listdir(chr_output_directory)
         files_list = [join(chr_output_directory, f) for f in filename_list]
         genome_bed_filename = join(output_directory, 'All_borders_' + str(border_width) + \
-                                   '_' + str(start_score) + '-' + str(end_score) + '.bed')
+                                   '_' + str(start_score) + '-' + str(end_score) + \
+                                   name_suffix + '.bed')
         with open(genome_bed_filename, 'w') as dst:
             track_line = 'track name="' + track_name + '" visibility=1 itemRgb="On"'
             dst.write(track_line + '\n')
