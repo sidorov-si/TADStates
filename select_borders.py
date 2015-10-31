@@ -64,14 +64,14 @@ score_rgb_dict = {1:'0,0,255', 2:'0,255,255', 3:'0,255,170', 4:'0,255,0', \
 
 
 def select_borders(tads_filename, scores_filename, start_score, end_score, \
-                   output_directory, half_width, scores_as_names):
+                   chr_output_directory, half_width, scores_as_names):
     name, ext = splitext(tads_filename)
     file_basename = basename(name)
-    if output_directory == '':
+    if chr_output_directory == '':
         file_name = name
     else:
         file_name = file_basename
-    output_filename = join(output_directory, file_name + '_borders_' + \
+    output_filename = join(chr_output_directory, file_name + '_borders_' + \
                            str(border_width) + '_' + str(start_score) + \
                            '-' + str(end_score) + '.bed')
     with open(tads_filename, 'r') as tads, open(scores_filename, 'r') as scores, \
@@ -115,7 +115,7 @@ def select_borders(tads_filename, scores_filename, start_score, end_score, \
             
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='select_borders 0.5')
+    arguments = docopt(__doc__, version='select_borders 0.6')
     try:
         border_width = int(arguments["-w"])
     except ValueError:
@@ -240,6 +240,10 @@ if __name__ == '__main__':
     if output_directory != '' and (not exists(output_directory)):
         makedirs(output_directory)
 
+    chr_output_directory = join(output_directory, 'per_chr')
+    if not exists(chr_output_directory):
+        makedirs(chr_output_directory)
+
     output_directory_total = None
     if arguments["-O"] != None:
         output_directory_total = arguments["-O"]
@@ -248,7 +252,7 @@ if __name__ == '__main__':
 
     if tads_filename != None:
         select_borders(tads_filename, scores_filename, start_score, end_score, \
-                       output_directory, half_width, scores_as_names)
+                       chr_output_directory, half_width, scores_as_names)
     else:
         files_list = sorted(listdir(tads_directory))
         if all:
@@ -261,10 +265,10 @@ if __name__ == '__main__':
             tads_full_path = join(tads_directory, tads)
             scores_full_path = join(scores_directory, scores)
             select_borders(tads_full_path, scores_full_path, start_score, end_score, \
-                           output_directory, half_width, scores_as_names)
+                           chr_output_directory, half_width, scores_as_names)
         # merge BED files for individual chromosomes in one BED file
-        filename_list = listdir(output_directory)
-        files_list = [join(output_directory, f) for f in filename_list]
+        filename_list = listdir(chr_output_directory)
+        files_list = [join(chr_output_directory, f) for f in filename_list]
         genome_bed_filename = join(output_directory, 'All_borders_' + str(border_width) + \
                                    '_' + str(start_score) + '-' + str(end_score) + '.bed')
         with open(genome_bed_filename, 'w') as dst:
