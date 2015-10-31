@@ -65,7 +65,8 @@ score_rgb_dict = {1:'0,0,255', 2:'0,255,255', 3:'0,255,170', 4:'0,255,0', \
 
 
 def select_borders(tads_filename, scores_filename, start_score, end_score, \
-                   chr_output_directory, half_width, scores_as_names, name_suffix):
+                   chr_output_directory, half_width, scores_as_names, name_suffix, \
+                   track_name):
     name, ext = splitext(tads_filename)
     file_basename = basename(name)
     if chr_output_directory == '':
@@ -216,15 +217,17 @@ if __name__ == '__main__':
             sys.exit(1)
 
         if arguments["-N"]:
-            track_name = arguments["-N"]
+            wg_track_name = arguments["-N"]
         else:
-            track_name = 'All_borders_' + str(border_width) + '_' + str(start_score) + \
+            wg_track_name = 'All_borders_' + str(border_width) + '_' + str(start_score) + \
                          '-' + str(end_score) + name_suffix
+        track_name = 'Borders_' + str(border_width) + '_' + str(start_score) + \
+                         '-' + str(end_score) + name_suffix
+
         if arguments["--all"]:
             all = True
         else:
             all = False
-
 
     if arguments["--scores-as-names"]:
         scores_as_names = True
@@ -259,7 +262,8 @@ if __name__ == '__main__':
 
     if tads_filename != None:
         select_borders(tads_filename, scores_filename, start_score, end_score, \
-                       chr_output_directory, half_width, scores_as_names, name_suffix)
+                       chr_output_directory, half_width, scores_as_names, name_suffix, \
+                       track_name)
     else:
         files_list = sorted(listdir(tads_directory))
         if all:
@@ -272,7 +276,8 @@ if __name__ == '__main__':
             tads_full_path = join(tads_directory, tads)
             scores_full_path = join(scores_directory, scores)
             select_borders(tads_full_path, scores_full_path, start_score, end_score, \
-                           chr_output_directory, half_width, scores_as_names, name_suffix)
+                           chr_output_directory, half_width, scores_as_names, name_suffix, \
+                           track_name)
         # merge BED files for individual chromosomes in one BED file
         filename_list = listdir(chr_output_directory)
         files_list = [join(chr_output_directory, f) for f in filename_list]
@@ -280,7 +285,7 @@ if __name__ == '__main__':
                                    '_' + str(start_score) + '-' + str(end_score) + \
                                    name_suffix + '.bed')
         with open(genome_bed_filename, 'w') as dst:
-            track_line = 'track name="' + track_name + '" visibility=1 itemRgb="On"'
+            track_line = 'track name="' + wg_track_name + '" visibility=1 itemRgb="On"'
             dst.write(track_line + '\n')
             for filename in sorted(files_list):
                 with open(filename, 'r') as src:
