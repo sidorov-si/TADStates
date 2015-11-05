@@ -49,8 +49,6 @@ Options:
 
 import sys
 
-print
-
 modules = ["docopt", "os", "numpy", "matplotlib", "re"]
 exit_flag = False
 for module in modules:
@@ -130,21 +128,27 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
     global wg_borders_in_vic_mins
     global wg_borders_out_vic_mins
     print
-    print 'Contact matrix file:', contact_matrix_filename
+    print 'Contact matrix file:'
+    print '   ', contact_matrix_filename
     if borders_filename != None:
-        print 'TAD borders file:', borders_filename
-    print 'Matrix resolution:', bp_to_KMbp(matrix_resolution)
-    print 'BedGraph track name:', track_name
+        print 'TAD borders file:'
+        print '   ', borders_filename
+    print 'Matrix resolution:'
+    print '   ', bp_to_KMbp(matrix_resolution)
+    print 'BedGraph track name:'
+    print '   ', track_name
     if vicinity_size != -1:
-        print 'Vicinity size:', bp_to_KMbp(vicinity_size)
+        print 'Vicinity size:'
+        print '   ', bp_to_KMbp(vicinity_size)
     else:
-        print 'Vicinity size: The whole chromosome.'
+        print 'Vicinity size: '
+        print '    The whole chromosome.'
     stdout.flush()
-    print 'Region to plot:',
+    print 'Region to plot:'
     if start_coord == None and end_coord == None:
-        print 'The whole chromosome.'
+        print '    The whole chromosome.'
     else:
-        print 'From', bp_to_KMbp(start_coord), 'to', bp_to_KMbp(end_coord)
+        print '    From', bp_to_KMbp(start_coord), 'to', bp_to_KMbp(end_coord)
     chrom_number = search(r'\d+|X|Y', chrom_name).group(0)
     if len(chrom_number) == 1 and chrom_number != 'X' and chrom_number != 'Y':
         chrom_number = '0' + chrom_number
@@ -164,12 +168,18 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                               bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins' + \
                                   '_vic' + bp_to_KMbp(vicinity_size) + name_suffix + '.png')
-    print 'Output BedGraph file:', output_bedgraph_filename
-    print 'Output PNG file (CWS):', output_png_filename
-    print 'Output PNG file (Scores vs CWS):', output_png_boxplot
-    print 'Output PNG file (Scores vs Avg CWS):', output_png_avgplot
-    print 'Output PNG file (Borders in CWS mins):', output_png_barplot
-    print 'Output PNG file (Borders in CWS mins proximities):', output_png_barplot_vic
+    print 'Output BedGraph file:'
+    print '   ', output_bedgraph_filename
+    print 'Output PNG file (CWS):'
+    print '   ', output_png_filename
+    print 'Output PNG file (Scores vs CWS):'
+    print '   ', output_png_boxplot
+    print 'Output PNG file (Scores vs Avg CWS):'
+    print '   ', output_png_avgplot
+    print 'Output PNG file (Borders in CWS mins):'
+    print '   ', output_png_barplot
+    print 'Output PNG file (Borders in CWS mins proximities):'
+    print '   ', output_png_barplot_vic
     stdout.flush()
 
     # Calculate CWS for all borders between windows
@@ -828,32 +838,42 @@ if __name__ == '__main__':
 
     print
     if input_directory != None:
-        print 'Input directory:', input_directory
+        print 'Input directory:'
+        print '   ', input_directory
         stdout.flush()
     if borders_filename != None:
-        print 'BED file with TAD borders:', borders_filename
+        print 'BED file with TAD borders:'
+        print '   ', borders_filename
         stdout.flush()
     if borders_directory != None:
-        print 'Directory with TAD border BED files:', borders_directory
+        print 'Directory with TAD border BED files:'
+        print '   ', borders_directory
         stdout.flush()
     if output_directory != None and output_directory != '':
-        print 'Output directory:', output_directory
+        print 'Output directory:'
+        print '   ', output_directory
         stdout.flush() 
     if name_suffix != '':
-        print 'Suffix for all filenames and tracknames:', name_suffix
+        print 'Suffix for all filenames and tracknames:'
+        print '   ', name_suffix
         stdout.flush() 
     if output_wg_bedgraph_filename != None:
-        print 'Output whole genome BedGraph file:', output_wg_bedgraph_filename
+        print 'Output whole genome BedGraph file:'
+        print '   ', output_wg_bedgraph_filename
         stdout.flush()
     if all_track_name != None:
-        print 'Whole genome BedGraph track name:', all_track_name
+        print 'Whole genome BedGraph track name:'
+        print '   ', all_track_name
         stdout.flush()
     if borders_directory != None:
-        print 'Whole genome output PNG file (Scores vs CWS):', wg_output_png_boxplot
-        print 'Whole genome output PNG file (Scores vs Avg CWS):', wg_output_png_avgplot
-        print 'Whole genome output PNG file (Borders in CWS mins):', wg_output_png_barplot
-        print 'Whole genome output PNG file (Borders in CWS mins proximities):', \
-              wg_output_png_barplot_vic
+        print 'Whole genome output PNG file (Scores vs CWS):'
+        print '   ', wg_output_png_boxplot
+        print 'Whole genome output PNG file (Scores vs Avg CWS):'
+        print '   ', wg_output_png_avgplot
+        print 'Whole genome output PNG file (Borders in CWS mins):'
+        print '   ', wg_output_png_barplot
+        print 'Whole genome output PNG file (Borders in CWS mins proximities):'
+        print '   ', wg_output_png_barplot_vic
         stdout.flush() 
 
     if matrix_filename != None: # there is only one contact matrix
@@ -866,6 +886,7 @@ if __name__ == '__main__':
         last_chr = False
         calc_cws(matrix_filename, chrom_name, borders_filename, whole_genome_analysis, last_chr)
     else: # there is a directory with matrices
+        print
         print 'Calculate CWS for all chromosomes in the input directory...'
         stdout.flush()
         wg_boxplot = []
