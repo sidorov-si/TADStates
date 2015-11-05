@@ -642,7 +642,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 0.9')
+    arguments = docopt(__doc__, version='calc_cws 1.0')
 
     try:
         matrix_resolution = int(arguments["-r"])
