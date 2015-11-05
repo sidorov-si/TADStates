@@ -25,7 +25,7 @@ Only this region will be plotted. Coordinates must be set in bp and
 be multiples of matrix resolution.
 
 Usage:
-  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-b <BED_file_with_TAD_borders> [--no-labels]) -o <output_directory> -e <vicinity_size> -s <name_suffix>]
+  calc_cws.py -m <contact_matrix> -r <matrix_resolution> [-c <chromosome_name> -n <track_name> -R <chromosome_region> (-b <BED_file_with_TAD_borders> [--labels]) -o <output_directory> -e <vicinity_size> -s <name_suffix>]
   calc_cws.py -d <input_directory> -r <matrix_resolution> [-B <directory_with_TAD_borders_BED_files> -N <track_name_for_whole_genome_BedGraph> -O <whole_genome_BedGraph_filename> -o <output_directory> -e <vicinity_size> -s <name_suffix>]
 
 Options:
@@ -44,7 +44,7 @@ Options:
   -o <output_directory>                      Output directory name. Default: directory that contains this script.
   -O <whole_genome_BedGraph_filename>        Output whole genome BedGraph filename. Is also put in the output directory.
   -s <name_suffix>                           Suffix that will be added to all filenames and tracknames. It should contain only symbols allowed for filenames. Default: ''.
-  --no-labels                                Do not label each TAD border with its score.
+  --labels                                   Label each TAD border with its score.
 """
 
 import sys
@@ -101,10 +101,10 @@ def plot_borders(start_score, end_score, color, ax, tad_border_cws, tad_border_s
                                       zip(tad_border_scores, tad_border_coords) \
                                       if border_score >= start_score and border_score <= end_score]
     ax.plot(tad_border_coords, tad_border_cws, '.', color = color, ms = 10)
-    if not no_labels: # annotate each border with a score label
-        labels = [str(score) for score in tad_border_scores \
-                             if score >= start_score and score <= end_score]
-        for label, x, y in zip(labels, tad_border_coords, tad_border_cws):
+    if labels: # annotate each border with a score label
+        label_values = [str(score) for score in tad_border_scores \
+                        if score >= start_score and score <= end_score]
+        for label, x, y in zip(label_values, tad_border_coords, tad_border_cws):
             ax.annotate(
                 label, 
                 xy = (x, y), xytext = (0, -15),
@@ -287,7 +287,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
         if borders_filename != None:
             # Plot TAD borders colored according to their scores
             message = 'Color '
-            if not no_labels:
+            if labels:
                 message += 'and label '
             message += 'TAD borders for chromosome ' + chrom_name + ' ...'
             print message,
@@ -603,7 +603,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                 print 'Finish.'
                 stdout.flush()
                 if whole_genome_analysis and last_chr:
-                    print "Plot TAD border counts in a matrix-resolution proximity of CWS "
+                    print "Plot TAD border counts in a matrix-resolution proximity of CWS " + \
                           "local minimums and out of them for the whole genome ...",
                     wg_in_vic_mins = tuple(value for key, value in wg_borders_in_vic_mins.items())
                     ind = numpy.arange(10) # the x locations for the groups
@@ -741,7 +741,7 @@ if __name__ == '__main__':
             end_coord = None
 
         borders_filename = None
-        no_labels = None
+        labels = None
         if arguments["-b"] != None:
             borders_filename = arguments["-b"]
             if not exists(borders_filename):
@@ -752,10 +752,7 @@ if __name__ == '__main__':
                 print "Error: BED file with TAD borders must be a regular file. " + \
                       "Something else given. Exit.\n"
                 sys.exit(1)
-            if arguments["--no-labels"]:
-                no_labels = True
-            else:
-                no_labels = False
+            labels = arguments["--labels"]
 
         input_directory = None
         borders_directory = None
@@ -765,7 +762,7 @@ if __name__ == '__main__':
         matrix_filename = None
         chrom_name = None
         borders_filename = None
-        no_labels = None
+        labels = None
         start_coord = None
         end_coord = None
         input_directory = arguments["-d"].rstrip('/')
