@@ -114,7 +114,7 @@ def autolabel(rects, ax):
     # attach some text labels to bars
     for rect in rects:
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width() / 2., height + 2, '%d' % int(height),
+        ax.text(rect.get_x() + rect.get_width() / 2., height + 0.2, '%d' % int(height),
                 ha = 'center', va = 'bottom')
 
 
@@ -166,7 +166,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                               bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
                               bp_to_KMbp(vicinity_size) + name_suffix + '.png')
-    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_mins' + \
+    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_prox_mins' + \
                                   '_vic' + bp_to_KMbp(vicinity_size) + name_suffix + '.png')
     print 'Output BedGraph file:'
     print '   ', output_bedgraph_filename
@@ -447,7 +447,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
 
         if borders_filename != None:
             # Plot TAD border counts in CWS local minimums and out of them
-            print 'Plot TAD border counts in CWS local minimums and out of them for chromosome...',
+            print 'Plot TAD border counts in CWS local minimums and out of them for chromosome',
             print chrom_name, '...'
             stdout.flush()
             with open(borders_filename, 'r') as borders:
@@ -487,13 +487,17 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                                                    for key in set(wg_borders_out_mins)}
                 # Plot borders_in_mins and borders_out_mins
                 in_mins = tuple(value for key, value in borders_in_mins.items())
+                max_value_1 = max(in_mins)
                 ind = numpy.arange(10) # the x locations for the groups
                 width = 0.35           # the width of the bars
                 rects1 = ax.bar(ind, in_mins, width, color = 'r')
                 out_mins = tuple(value for key, value in borders_out_mins.items())
+                max_value_2 = max(out_mins)
                 rects2 = ax.bar(ind + width, out_mins, width, color = 'y')
+                max_value = max(max_value_1, max_value_2)
                 ax.set_xlabel('Scores')
                 ax.set_ylabel('Number of TAD borders')
+                plt.ylim(ymax = 1.2 * max_value)
                 barplot_header = 'TAD borders and CWS local mins for ' \
                                  + chrom_name + '. Vicinity:'
                 if vicinity_size != -1:
@@ -510,17 +514,22 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                 autolabel(rects2, ax)
                 plt.savefig(output_png_barplot)
                 ax.cla()
+                plt.autoscale()
                 print 'Finish.'
                 stdout.flush()
                 if whole_genome_analysis and last_chr:
                     print "Plot TAD border counts in CWS local minimums and out of them " + \
                           "for the whole genome ...",
                     wg_in_mins = tuple(value for key, value in wg_borders_in_mins.items())
+                    wg_in_mins_max_value = max(wg_in_mins)
                     ind = numpy.arange(10) # the x locations for the groups
                     width = 0.35           # the width of the bars
                     wg_rects1 = ax.bar(ind, wg_in_mins, width, color = 'r')
                     wg_out_mins = tuple(value for key, value in wg_borders_out_mins.items())
+                    wg_out_mins_max_value = max(wg_out_mins)
                     wg_rects2 = ax.bar(ind + width, wg_out_mins, width, color = 'y')
+                    wg_mins_max_value = max(wg_in_mins_max_value, wg_out_mins_max_value)
+                    plt.ylim(ymax = 1.2 * wg_mins_max_value)
                     ax.set_xlabel('Scores')
                     ax.set_ylabel('Number of TAD borders')
                     wg_barplot_header = 'TAD borders and CWS local mins ' + \
@@ -539,12 +548,13 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                     autolabel(wg_rects2, ax)
                     plt.savefig(wg_output_png_barplot)
                     ax.cla()
+                    plt.autoscale()
                     print 'Finish.'
                     stdout.flush()
 
             # Plot TAD border counts in some proximity of CWS local minimums and out of them
             print 'Plot TAD border counts in a matrix-resolution proximity of CWS local minimums ' + \
-                  'and out of them for chromosome...', chrom_name, '...'
+                  'and out of them for chromosome', chrom_name, '...'
             stdout.flush()
             with open(borders_filename, 'r') as borders:
                 tad_border_coords = []
@@ -584,13 +594,17 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                                                    borders_out_vic_mins.get(key) \
                                                    for key in set(wg_borders_out_vic_mins)}
 
-                # Plot borders_in_mins and borders_out_mins
-                in_mins = tuple(value for key, value in borders_in_mins.items())
+                # Plot borders_in_vic_mins and borders_out_vic_mins
+                in_vic_mins = tuple(value for key, value in borders_in_vic_mins.items())
+                max_value_vic_1 = max(in_vic_mins)
                 ind = numpy.arange(10) # the x locations for the groups
                 width = 0.35        # the width of the bars
-                rects1 = ax.bar(ind, in_mins, width, color = 'r')
-                out_mins = tuple(value for key, value in borders_out_mins.items())
-                rects2 = ax.bar(ind + width, out_mins, width, color = 'y')
+                rects1 = ax.bar(ind, in_vic_mins, width, color = 'r')
+                out_vic_mins = tuple(value for key, value in borders_out_vic_mins.items())
+                max_value_vic_2 = max(out_vic_mins)
+                rects2 = ax.bar(ind + width, out_vic_mins, width, color = 'y')
+                max_vic_value = max(max_value_vic_1, max_value_vic_2)
+                plt.ylim(ymax = 1.2 * max_vic_value)
                 ax.set_xlabel('Scores')
                 ax.set_ylabel('Number of TAD borders')
                 barplot_header = 'TAD borders and CWS local mins proximities for ' \
@@ -610,17 +624,22 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                 autolabel(rects2, ax)
                 plt.savefig(output_png_barplot_vic)
                 ax.cla()
+                plt.autoscale()
                 print 'Finish.'
                 stdout.flush()
                 if whole_genome_analysis and last_chr:
                     print "Plot TAD border counts in a matrix-resolution proximity of CWS " + \
                           "local minimums and out of them for the whole genome ...",
                     wg_in_vic_mins = tuple(value for key, value in wg_borders_in_vic_mins.items())
+                    max_vic_value_1 = max(wg_in_vic_mins)
                     ind = numpy.arange(10) # the x locations for the groups
                     width = 0.35           # the width of the bars
                     wg_vic_rects1 = ax.bar(ind, wg_in_vic_mins, width, color = 'r')
                     wg_out_vic_mins = tuple(value for key, value in wg_borders_out_vic_mins.items())
+                    max_vic_value_2 = max(wg_out_vic_mins)
                     wg_vic_rects2 = ax.bar(ind + width, wg_out_vic_mins, width, color = 'y')
+                    max_value_vic = max(max_vic_value_1, max_vic_value_2)
+                    plt.ylim(ymax = 1.2 * max_value_vic)
                     ax.set_xlabel('Scores')
                     ax.set_ylabel('Number of TAD borders')
                     wg_vic_barplot_header = 'TAD borders and CWS local mins proximities' + \
@@ -640,6 +659,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                     autolabel(wg_vic_rects2, ax)
                     plt.savefig(wg_output_png_barplot_vic)
                     ax.cla()
+                    plt.autoscale()
                     print 'Finish.'
                     stdout.flush()
 
