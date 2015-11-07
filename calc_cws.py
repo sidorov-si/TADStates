@@ -155,32 +155,37 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
         chrom_id = 'chr' + chrom_number
     else:
         chrom_id = chrom_name
+    if vicinity_size != -1:
+        vicinity_infix = bp_to_KMbp(vicinity_size)
+    else:
+        vicinity_infix = 'Whole'
     output_bedgraph_filename = join(bedgraph_directory, chrom_id + '_CWS' + '_vic' + \
-                                    bp_to_KMbp(vicinity_size) + name_suffix + '.bedGraph')
+                                    vicinity_infix + name_suffix + '.bedGraph')
     filename_list.append(output_bedgraph_filename)
     output_png_filename = join(png_directory, chrom_id + '_CWS' + '_vic' + \
-                               bp_to_KMbp(vicinity_size) + name_suffix + '.png')
-    output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + name_suffix + '.png') 
-    output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + name_suffix + '.png')
-    output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
-                              bp_to_KMbp(vicinity_size) + name_suffix + '.png')
-    output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_prox_mins' + \
-                                  '_vic' + bp_to_KMbp(vicinity_size) + name_suffix + '.png')
+                               vicinity_infix + name_suffix + '.png')
     print 'Output BedGraph file:'
     print '   ', output_bedgraph_filename
     print 'Output PNG file (CWS):'
     print '   ', output_png_filename
-    print 'Output PNG file (Scores vs CWS):'
-    print '   ', output_png_boxplot
-    print 'Output PNG file (Scores vs Avg CWS):'
-    print '   ', output_png_avgplot
-    print 'Output PNG file (Borders in CWS mins):'
-    print '   ', output_png_barplot
-    print 'Output PNG file (Borders in CWS mins proximities):'
-    print '   ', output_png_barplot_vic
-    stdout.flush()
+    if borders_filename != None:
+        output_png_boxplot = join(png_directory, chrom_id + '_Scores-CWS' + '_vic' + \
+                                  vicinity_infix + name_suffix + '.png') 
+        output_png_avgplot = join(png_directory, chrom_id + '_Scores-CWS_avg' + '_vic' + \
+                                  vicinity_infix + name_suffix + '.png')
+        output_png_barplot = join(png_directory, chrom_id + '_Borders_in_mins' + '_vic' + \
+                                  vicinity_infix + name_suffix + '.png')
+        output_png_barplot_vic = join(png_directory, chrom_id + '_Borders_in_prox_mins' + \
+                                      '_vic' + vicinity_infix + name_suffix + '.png')
+        print 'Output PNG file (Scores vs CWS):'
+        print '   ', output_png_boxplot
+        print 'Output PNG file (Scores vs Avg CWS):'
+        print '   ', output_png_avgplot
+        print 'Output PNG file (Borders in CWS mins):'
+        print '   ', output_png_barplot
+        print 'Output PNG file (Borders in CWS mins proximities):'
+        print '   ', output_png_barplot_vic
+        stdout.flush()
 
     # Calculate CWS for all borders between windows
     with open(contact_matrix_filename, 'r') as infile:
@@ -672,7 +677,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='calc_cws 1.0')
+    arguments = docopt(__doc__, version='calc_cws 1.1')
 
     try:
         matrix_resolution = int(arguments["-r"])
