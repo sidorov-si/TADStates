@@ -453,7 +453,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
         if borders_filename != None:
             # Plot TAD border counts in CWS local minimums and out of them
             print 'Plot TAD border counts in CWS local minimums and out of them for chromosome',
-            print chrom_name, '...'
+            print chrom_name, '...',
             stdout.flush()
             with open(borders_filename, 'r') as borders:
                 tad_border_coords = []
@@ -559,7 +559,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
 
             # Plot TAD border counts in some proximity of CWS local minimums and out of them
             print 'Plot TAD border counts in a matrix-resolution proximity of CWS local minimums ' + \
-                  'and out of them for chromosome', chrom_name, '...'
+                  'and out of them for chromosome', chrom_name, '...',
             stdout.flush()
             with open(borders_filename, 'r') as borders:
                 tad_border_coords = []
