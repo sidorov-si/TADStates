@@ -22,7 +22,7 @@ Options:
   -o <output_directory>          Output directory.
   -t <threads_number>            Number of threads for read mapping. Default: 8.
   --clean                        Remove all SAM and TSV files from the output directory (they're necessary for only the counstruction of contact matrices).
-  --temp-directory               Temp directory. Default: /tmp.
+  --tmp-dir <temp-directory>     Temp directory. Default: /tmp.
 """
 
 # Some code from the TADbit tutorial is used here
