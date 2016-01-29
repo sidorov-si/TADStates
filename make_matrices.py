@@ -5,7 +5,7 @@ If quality assessment and trimming are necessary for Hi-C reads, they must be
 made before launching the script on these reads.
 
 Usage:
-  make_matrices.py (-1 <left_fastq_reads> -2 <right_fastq_reads> -p <reads_prefix> | -r <fastq_reads>) -g <fasta_ref_genome> -i <ref_genome_index> -o <output_directory> [-e <restriction_enzyme> -c <list_of_chromosome_names> -R <matrix_resolution> -t <threads_number> --clean]
+  make_matrices.py (-1 <left_fastq_reads> -2 <right_fastq_reads> -p <reads_prefix> | -r <fastq_reads>) -g <fasta_ref_genome> -i <ref_genome_index> -o <output_directory> [-e <restriction_enzyme> -c <list_of_chromosome_names> -R <matrix_resolution> -t <threads_number> --clean --tmp-dir <temp_directory>]
 
 Options:
   -h --help                      Show this screen.
@@ -22,6 +22,7 @@ Options:
   -o <output_directory>          Output directory.
   -t <threads_number>            Number of threads for read mapping. Default: 8.
   --clean                        Remove all SAM and TSV files from the output directory (they're necessary for only the counstruction of contact matrices).
+  --temp-directory               Temp directory. Default: /tmp.
 """
 
 # Some code from the TADbit tutorial is used here
@@ -149,7 +150,7 @@ def add_headers(chromosomes, resolution, output_directory):
 
 def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
                   output_directory, output_prefix, enzyme, res, chromosomes, threads_number, \
-                  clean_tmp):
+                  clean_tmp, tmp_dir):
 
     print 'Begin to process reads.'
 
@@ -173,6 +174,7 @@ def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta
     print 'Reference genome FASTA:    ', genome_fasta
     print 'Reference genome GEM index:', genome_index
     print 'Output directory:          ', output_directory
+    print 'Temp directory:            ', tmp_dir
     print 'Enzyme:                    ', enzyme
     print 'Resolution:                ', res, 'bp'
     print 'Number of threads:         ', threads_number
@@ -188,7 +190,8 @@ def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta
     print 'Iterative mapping of left reads (using ' + str(threads_number) + ' threads)...'
     stdout.flush()
     sams_left = iterative_mapping(genome_index, left_reads, out_sam_left_path, \
-                                  range_start_left, range_stop_left, nthreads=threads_number)
+                                  range_start_left, range_stop_left, nthreads=threads_number,
+                                  temp_dir=tmp_dir)
     print 'Done.'
     stdout.flush()
 
@@ -198,7 +201,8 @@ def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta
     print 'Iterative mapping of right reads (using ' + str(threads_number) + ' threads)...'
     stdout.flush()
     sams_right = iterative_mapping(genome_index, right_reads, out_sam_right_path, \
-                                   range_start_right, range_stop_right, nthreads=threads_number)
+                                   range_start_right, range_stop_right, nthreads=threads_number,
+                                   temp_dir=tmp_dir)
     print 'Done.'
     stdout.flush()
 
@@ -296,7 +300,7 @@ def get_chromosome_names(chromosome_names_file):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='make_matrices 0.7')
+    arguments = docopt(__doc__, version='make_matrices 0.8')
     if arguments["-r"] != None: # left and right reads are stored in one file
         reads_fastq = arguments["-r"]
         if not exists(reads_fastq):
@@ -388,7 +392,12 @@ if __name__ == '__main__':
     else:
         clean_tmp = False
 
+    if arguments["--tmp-dir"] != None:
+        tmp_dir = arguments["--tmp-dir"]
+    else:
+        tmp_dir = "/tmp"
+
     make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
                   output_directory, output_prefix, enzyme, resolution, chromosomes, threads_number, \
-                  clean_tmp)
+                  clean_tmp, tmp_dir)
 
