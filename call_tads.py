@@ -74,7 +74,7 @@ def call_tads(matrix_filenames, chrom_name):
     else:
         chrom_id = chrom_name
         
-    matrix_basename = splitext(basename(matrix_filename))[0]
+    #matrix_basename = splitext(basename(matrix_filename))[0]
     output_txt_filename = join(txt_directory, chrom_id + '_TADs.txt')
     print 'Output TXT file:', output_txt_filename
     output_bed_filename = join(bed_directory, chrom_id + '_TADs.bed')
@@ -83,16 +83,25 @@ def call_tads(matrix_filenames, chrom_name):
 
     # Call TADs and write their borders in TADbit text format and in BED format
     chrom = Chromosome(name=chrom_name)
-    combined_experiment_name = 'batch'
-    experiment_names = []
-    for matrix_index, matrix_filename in enumerate(matrix_filenames):
-        experiment_name = splitext(basename(matrix_filename))[0] + '_' + str(matrix_index)
-        experiment_names.append(experiment_name)
-        combined_experiment_name += '_' + experiment_name 
+    if len(matrix_filenames) > 1: # several matrices for one chromosome
+        combined_experiment_name = 'batch'
+        experiment_names = []
+        for matrix_index, matrix_filename in enumerate(matrix_filenames):
+            experiment_name = splitext(basename(matrix_filename))[0] + '_' + str(matrix_index)
+            experiment_names.append(experiment_name)
+            combined_experiment_name += '_' + experiment_name 
+            chrom.add_experiment(experiment_name, hic_data=matrix_filename, \
+                                 resolution=matrix_resolution)
+        chrom.find_tad(experiment_names, batch_mode = True, n_cpus=thread_number)
+        chrom.experiments[combined_experiment_name].write_tad_borders(savedata=output_txt_filename)
+    else: # only one matrix for one chromosome
+        matrix_filename = matrix_filenames[0]
+        experiment_name = splitext(basename(matrix_filename))[0]
         chrom.add_experiment(experiment_name, hic_data=matrix_filename, \
                              resolution=matrix_resolution)
-    chrom.find_tad(experiment_names, batch_mode = True, n_cpus=thread_number)
-    chrom.experiments[combined_experiment_name].write_tad_borders(savedata=output_txt_filename)
+        chrom.find_tad(experiment_name, n_cpus=thread_number)
+        chrom.experiments[experiment_name].write_tad_borders(savedata=output_txt_filename)
+        
     with open(output_txt_filename, 'r') as src, open(output_bed_filename, 'w') as dst:
         track_line = 'track name="' + chrom_name + '_TADs" visibility=1 itemRgb="On"'
         dst.write(track_line + '\n')
@@ -128,7 +137,7 @@ def get_chrom_name(matrix_filename):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='call_tads 0.6')
+    arguments = docopt(__doc__, version='call_tads 0.7')
     if arguments["-m"] != None:
         matrix_filenames = arguments["-m"].split(",")
         for matrix_filename in matrix_filenames:
@@ -213,7 +222,7 @@ if __name__ == '__main__':
         call_tads(matrix_filenames, chrom_name)
     else: # there is a directory with matrices or a list of directories with matrices
         # prepare a list of contact matrix filenames for each chromosome
-        # all these list are saved in a list
+        # all these lists are saved in a list
         prev_count = -1
         prev_directory = ''
         full_list_of_files = []
@@ -231,7 +240,7 @@ if __name__ == '__main__':
                 full_list_of_files.append(files)
         full_list_per_chr = [list(chr_tuple) for chr_tuple in zip(*full_list_of_files)]
         for matrix_filenames in full_list_per_chr: 
-            # call TADs for each chromosome using several experiments
+            # call TADs for each chromosome
             matrix_filenames_full = [join(directory, file) for directory, file in \
                                      zip(input_directories, matrix_filenames)]
             chrom_name = get_chrom_name(matrix_filenames_full[0])
