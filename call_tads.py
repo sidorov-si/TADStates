@@ -74,12 +74,16 @@ def call_tads(matrix_filenames, chrom_name):
     else:
         chrom_id = chrom_name
         
-    #matrix_basename = splitext(basename(matrix_filename))[0]
     output_txt_filename = join(txt_directory, chrom_id + '_TADs.txt')
     print 'Output TXT file:', output_txt_filename
     output_bed_filename = join(bed_directory, chrom_id + '_TADs.bed')
     print 'Output BED file:', output_bed_filename
     filename_list.append(output_bed_filename)
+
+    tads_2D_filename = join(png_directory, chrom_id + '_TADs_2D.png')
+    print 'Output 2D TAD plot file:', tads_2D_filename
+    tads_1D_filename = join(png_directory, chrom_id + '_TADs_1D.png')
+    print 'Output 1D TAD plot file:', tads_1D_filename
 
     # Call TADs and write their borders in TADbit text format and in BED format
     chrom = Chromosome(name=chrom_name)
@@ -94,6 +98,8 @@ def call_tads(matrix_filenames, chrom_name):
                                  resolution=matrix_resolution)
         chrom.find_tad(experiment_names, batch_mode = True, n_cpus=thread_number)
         chrom.experiments[combined_experiment_name].write_tad_borders(savedata=output_txt_filename)
+        chrom.visualize(combined_experiment_name, paint_tads=True, savefig=tads_2D_filename)
+        chrom.tad_density_plot(combined_experiment_name, savefig=tads_1D_filename)
     else: # only one matrix for one chromosome
         matrix_filename = matrix_filenames[0]
         experiment_name = splitext(basename(matrix_filename))[0]
@@ -101,7 +107,9 @@ def call_tads(matrix_filenames, chrom_name):
                              resolution=matrix_resolution)
         chrom.find_tad(experiment_name, n_cpus=thread_number)
         chrom.experiments[experiment_name].write_tad_borders(savedata=output_txt_filename)
-        
+        chrom.visualize(experiment_name, paint_tads=True, savefig=tads_2D_filename)
+        chrom.tad_density_plot(experiment_name, savefig=tads_1D_filename)
+
     with open(output_txt_filename, 'r') as src, open(output_bed_filename, 'w') as dst:
         track_line = 'track name="' + chrom_name + '_TADs" visibility=1 itemRgb="On"'
         dst.write(track_line + '\n')
@@ -209,12 +217,15 @@ if __name__ == '__main__':
     bed_directory = join(output_directory, 'BED')
     txt_directory = join(output_directory, 'TXT')
     tdb_directory = join(output_directory, 'TDB')
+    png_directory = join(output_directory, 'PNG')
     if not exists(bed_directory):
         makedirs(bed_directory)
     if not exists(txt_directory):
         makedirs(txt_directory)
     if not exists(tdb_directory):
         makedirs(tdb_directory)
+    if not exists(png_directory):
+        makedirs(png_directory)
 
     if matrix_filenames != None: # there is only one chromosome to process
         if chrom_name == None:
