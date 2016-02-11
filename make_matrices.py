@@ -275,9 +275,9 @@ def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta
     if clean_tmp: # Remove all SAM and TSV files from the output directory
         print 'Remove SAM and TSV files from the output directory.'
         stdout.flush()
-        os.remove(out_sam_left_path + '*')
-        os.remove(out_sam_right_path + '*')
-        os.remove(join(output_directory, '*.tsv'))
+        remove(out_sam_left_path + '*')
+        remove(out_sam_right_path + '*')
+        remove(join(output_directory, '*.tsv'))
         print 'Done.'
         stdout.flush()
 

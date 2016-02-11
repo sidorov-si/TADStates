@@ -350,7 +350,7 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
         ax.cla()
         print 'Finish.'
         stdout.flush()
-       
+ 
         if borders_filename != None:
             # Plot TAD border scores vs CWS (boxplot)
             print "Generate PNG file with 'TAD border scores vs CWS' plot for chromosome", \
