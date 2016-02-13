@@ -376,7 +376,8 @@ if __name__ == '__main__':
     if arguments["-c"] != None:
          chromosomes = get_chromosome_names(arguments["-c"]) # Exit if file not found
     else:
-         chromosomes = ['chr' + str(c) for c in range(1, 23) + ['X', 'Y']]
+         chromosomes = ['chr' + (str(c) if c >= 10 else "0" + str(c)) \
+                        for c in range(1, 23) + ['X', 'Y']]
 
     if arguments["-t"] != None:
          try:
@@ -397,7 +398,7 @@ if __name__ == '__main__':
     else:
         tmp_dir = "/tmp"
 
-    make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
-                  output_directory, output_prefix, enzyme, resolution, chromosomes, threads_number, \
-                  clean_tmp, tmp_dir)
+    #make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta, genome_index, \
+    #              output_directory, output_prefix, enzyme, resolution, chromosomes, threads_number, \
+    #              clean_tmp, tmp_dir)
 

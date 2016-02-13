@@ -318,7 +318,9 @@ def calc_cws(contact_matrix_filename, chrom_name, borders_filename, \
                     border_score = int(line_fields[4])
                     tad_border_coords.append(border_coord)
                     tad_border_scores.append(border_score)
+                print "tad_border_coords=", tad_border_coords
                 tad_border_numbers = [coord / matrix_resolution - 1 for coord in tad_border_coords]
+                print "len(result) =", len(result), "tad_border_numbers=", tad_border_numbers
                 tad_border_cws = [result[border_number] for border_number in tad_border_numbers]
                 # Select the weakest borders and paint them green
                 plot_borders(1, 3, 'green', ax, tad_border_cws, tad_border_scores, tad_border_coords)
