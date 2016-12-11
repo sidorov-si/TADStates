@@ -31,7 +31,7 @@ import sys
 
 print
 
-modules = ["docopt", "pytadbit", "os", "glob"]
+modules = ["docopt", "pytadbit", "os"]
 exit_flag = False
 for module in modules:
     try:
@@ -59,8 +59,8 @@ from os.path import join
 from os.path import exists
 from os.path import isfile
 from os import rename
+from os import remove
 from sys import stdout
-import glob
 
 
 def calc_left_right_ranges(reads_fastq): 
@@ -277,9 +277,9 @@ def make_matrices(left_reads_fastq, right_reads_fastq, reads_fastq, genome_fasta
     if clean_tmp: # Remove all SAM and TSV files from the output directory
         print 'Remove SAM and TSV files from the output directory.'
         stdout.flush()
-        map(os.remove, glob.glob(out_sam_left_path + '*'))
-        map(os.remove, glob.glob(out_sam_right_path + '*'))
-        map(os.remove, glob.glob(join(output_directory, '*.tsv')))
+        remove(out_sam_left_path + '*')
+        remove(out_sam_right_path + '*')
+        remove(join(output_directory, '*.tsv'))
         print 'Done.'
         stdout.flush()
 

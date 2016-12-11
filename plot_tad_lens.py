@@ -8,7 +8,7 @@ Options:
   -h --help               Show this screen.
   --version               Show version.
   -i <tad_bedfiles_list>  One TADs BED filename or several TADs BED filenames separated by comma.
-  --header <plot_header>  The header for the plot. Default: 'TADs length boxplot'.
+  --header <plot_header>  The header for the plot. Default: 'TAD lengths boxplot'.
   -l <lables_list>        The list of labels for boxes on the plot. Default: '1','2','3',... .
   -o <output_filename>    The output file for the boxplot. Default: 'TAD_lens_boxplot.png'.
   --no-fliers             Don't plot outliers.
@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fliers, show_means):
-    print "Create TAD length boxplot for the following files:"
+    print "Create TAD lengths boxplot for the following files:"
     stdout.flush()
     for bed_filename in bed_filenames:
         print bed_filename
@@ -65,8 +65,8 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fl
     print
     stdout.flush()
 
-    # Plot TADs length boxplot
-    print 'Plot TADs length boxplot...',
+    # Plot TAD lengths boxplot
+    print 'Plot TAD lengths boxplot...',
     stdout.flush()
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -86,6 +86,8 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fl
     sym = '' if no_fliers else 'b.'
     ax.boxplot(boxplot_data, labels = tad_labels, showmeans = show_means, sym = sym, whis = [5, 95])
     ax.set_ylabel('TAD length, bp')
+    current_ylim = ax.get_ylim()
+    ax.set_ylim([0, current_ylim[1]])
     ax.set_title(plot_header)
     plt.savefig(output_filename)
     print 'Finish.'
@@ -93,7 +95,7 @@ def plot_tad_lens(bed_filenames, plot_header, tad_labels, output_filename, no_fl
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='plot_tad_lens 0.3')
+    arguments = docopt(__doc__, version='plot_tad_lens 0.4')
     bed_filenames = arguments["-i"].split(",")
     for bed_filename in bed_filenames:
         if not exists(bed_filename):
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     if arguments["--header"] != None:
         plot_header = arguments["--header"]
     else:
-        plot_header = 'TADs length boxplot'
+        plot_header = 'TAD lengths boxplot'
 
     if arguments["-l"] != None:
         tad_labels = arguments["-l"].split(",")
